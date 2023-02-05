@@ -12,7 +12,12 @@ import (
 	"gorm.io/gorm"
 )
 
-var tokens = make(map[string]string)
+var Tokens = make(map[string]string)
+
+func GetToken(email string) (string, bool) {
+	tok, ok := Tokens[email]
+	return tok, ok
+}
 
 type User struct {
 	gorm.Model
@@ -63,7 +68,7 @@ func LoginCheck(email string, password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	tokens[email] = token
+	Tokens[email] = token
 	return token, nil
 }
 
