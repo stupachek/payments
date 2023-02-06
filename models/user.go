@@ -13,6 +13,7 @@ import (
 )
 
 var Tokens = make(map[string]string)
+var ErrUnauthenticated = errors.New("unauthenticated")
 
 func GetToken(email string) (string, bool) {
 	tok, ok := Tokens[email]
@@ -21,7 +22,6 @@ func GetToken(email string) (string, bool) {
 
 type User struct {
 	gorm.Model
-	// ID        uint   `json:"id" gorm:"primary_key"`
 	UUID      uuid.UUID `json:"uuid" gorm:"type:uuid"`
 	FisrtName string    `json:"firstName" gorm:"size:50;not null"`
 	LastName  string    `json:"lastName" gorm:"size:50;not null"`
@@ -55,14 +55,14 @@ func LoginCheck(email string, password string) (string, error) {
 	u := User{}
 	err := DB.Model(User{}).Where("email = ?", email).Take(&u).Error
 	if err != nil {
-		return "", errors.New("unauthenticated")
+		return "", ErrUnauthenticated
 	}
 	ok, err := argon2.VerifyEncoded([]byte(password), []byte(u.Password))
 	if err != nil {
 		return "", err
 	}
 	if !ok {
-		return "", errors.New("unauthenticated")
+		return "", ErrUnauthenticated
 	}
 	token, err := randToken(32)
 	if err != nil {
