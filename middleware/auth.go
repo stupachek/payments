@@ -19,19 +19,19 @@ func Auth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		tok, ok := models.GetToken(u.Email)
-		if !ok {
-			c.JSON(http.StatusUnauthorized, UnauthenticatedError)
-			c.Abort()
-			return
-		}
 		userTok := c.GetHeader("Authorization")
 		if userTok == "" {
 			c.JSON(http.StatusUnauthorized, UnauthenticatedError)
 			c.Abort()
 			return
 		}
-		if tok != userTok {
+		email, ok := models.GetEmail(userTok)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, UnauthenticatedError)
+			c.Abort()
+			return
+		}
+		if email != u.Email {
 			c.JSON(http.StatusUnauthorized, UnauthenticatedError)
 			c.Abort()
 			return

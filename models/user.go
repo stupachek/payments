@@ -15,9 +15,9 @@ import (
 var Tokens = make(map[string]string)
 var ErrUnauthenticated = errors.New("unauthenticated")
 
-func GetToken(email string) (string, bool) {
-	tok, ok := Tokens[email]
-	return tok, ok
+func GetEmail(token string) (string, bool) {
+	email, ok := Tokens[token]
+	return email, ok
 }
 
 type User struct {
@@ -68,7 +68,7 @@ func LoginCheck(email string, password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	Tokens[email] = token
+	Tokens[token] = email
 	return token, nil
 }
 
