@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"html"
 	"strings"
 
 	"github.com/google/uuid"
@@ -37,6 +36,7 @@ func (u *User) CreateUser() (*User, error) {
 	return u, nil
 }
 
+// Function called automatically before CreateUser()
 func (u *User) BeforeCreate() error {
 	argon := argon2.DefaultConfig()
 
@@ -46,8 +46,9 @@ func (u *User) BeforeCreate() error {
 	}
 	u.UUID = uuid.New()
 	u.Password = string(hashedPasword)
-	u.FisrtName = html.EscapeString(strings.TrimSpace(u.FisrtName))
-	u.LastName = html.EscapeString(strings.TrimSpace(u.LastName))
+	u.FisrtName = strings.TrimSpace(u.FisrtName)
+	u.LastName = strings.TrimSpace(u.LastName)
+	u.Email = strings.TrimSpace(u.Email)
 	return nil
 }
 
