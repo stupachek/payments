@@ -1,11 +1,12 @@
 package main
 
 import (
+	"pay/app"
 	"pay/models"
 )
 
 func main() {
 	DB := models.ConnectDataBase()
-	app := New(DB)
-	app.Run()
+	app := app.New(DB)
+	app.Run(":8080")
 }

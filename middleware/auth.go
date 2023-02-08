@@ -2,20 +2,20 @@ package middleware
 
 import (
 	"net/http"
+	"pay/controllers"
 	_ "pay/controllers"
 	"pay/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 var UnauthenticatedError = gin.H{"error": "unauthenticated"}
 
-func Auth(DB *gorm.DB) gin.HandlerFunc {
+func Auth(c controllers.Controller) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		u := models.User{}
 		uuid := ctx.Param("user_uuid")
-		err := DB.Model(models.User{}).Where("UUID = ?", uuid).Take(&u).Error
+		err := c.DB.Model(models.User{}).Where("UUID = ?", uuid).Take(&u).Error
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, UnauthenticatedError)
 			ctx.Abort()
