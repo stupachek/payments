@@ -22,7 +22,7 @@ func New(DB *gorm.DB) *App {
 	public.POST("/register", c.Register)
 	public.POST("/login", c.Login)
 
-	user := public.Group("/:user_uuid").Use(middleware.Auth(DB))
+	user := public.Group("/:user_uuid").Use(middleware.Auth(c))
 	user.GET("/hello", controllers.Hello)
 	return &App{
 		DB:     DB,
@@ -30,6 +30,6 @@ func New(DB *gorm.DB) *App {
 	}
 }
 
-func (a *App) Run() {
-	a.Router.Run(":8080")
+func (a *App) Run(port string) {
+	a.Router.Run(port)
 }
