@@ -5,6 +5,7 @@ import (
 	"pay/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 type RegisterInput struct {
@@ -14,10 +15,14 @@ type RegisterInput struct {
 	Password  string `json:"password" binding:"required"`
 }
 
-func Register(c *gin.Context) {
+type Controller struct {
+	DB *gorm.DB
+}
+
+func (c *Controller) Register(ctx *gin.Context) {
 	var input RegisterInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -27,10 +32,10 @@ func Register(c *gin.Context) {
 		Email:     input.Email,
 		Password:  input.Password,
 	}
-	_, err := user.CreateUser()
+	_, err := user.CreateUser(c.DB)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "registration success", "uuid": user.UUID})
+	ctx.JSON(http.StatusOK, gin.H{"message": "registration success", "uuid": user.UUID})
 }

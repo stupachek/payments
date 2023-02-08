@@ -8,7 +8,7 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/joho/godotenv v1.5.0
 	github.com/matthewhartstonge/argon2 v0.3.2
-	gorm.io/gorm v1.24.5
+
 )
 
 require (

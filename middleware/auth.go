@@ -2,40 +2,42 @@ package middleware
 
 import (
 	"net/http"
+	_ "pay/controllers"
 	"pay/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 var UnauthenticatedError = gin.H{"error": "unauthenticated"}
 
-func Auth() gin.HandlerFunc {
-	return func(c *gin.Context) {
+func Auth(DB *gorm.DB) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
 		u := models.User{}
-		uuid := c.Param("user_uuid")
-		err := models.DB.Model(models.User{}).Where("UUID = ?", uuid).Take(&u).Error
+		uuid := ctx.Param("user_uuid")
+		err := DB.Model(models.User{}).Where("UUID = ?", uuid).Take(&u).Error
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, UnauthenticatedError)
-			c.Abort()
+			ctx.JSON(http.StatusUnauthorized, UnauthenticatedError)
+			ctx.Abort()
 			return
 		}
-		userTok := c.GetHeader("Authorization")
+		userTok := ctx.GetHeader("Authorization")
 		if userTok == "" {
-			c.JSON(http.StatusUnauthorized, UnauthenticatedError)
-			c.Abort()
+			ctx.JSON(http.StatusUnauthorized, UnauthenticatedError)
+			ctx.Abort()
 			return
 		}
 		email, ok := models.GetEmail(userTok)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, UnauthenticatedError)
-			c.Abort()
+			ctx.JSON(http.StatusUnauthorized, UnauthenticatedError)
+			ctx.Abort()
 			return
 		}
 		if email != u.Email {
-			c.JSON(http.StatusUnauthorized, UnauthenticatedError)
-			c.Abort()
+			ctx.JSON(http.StatusUnauthorized, UnauthenticatedError)
+			ctx.Abort()
 			return
 		}
-		c.Next()
+		ctx.Next()
 	}
 }

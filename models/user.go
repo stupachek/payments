@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/jinzhu/gorm"
 	"github.com/matthewhartstonge/argon2"
-	"gorm.io/gorm"
 )
 
 var Tokens = make(map[string]string)
@@ -28,7 +28,7 @@ type User struct {
 	Password  string    `json:"password" gorm:"size:250;not null"`
 }
 
-func (u *User) CreateUser() (*User, error) {
+func (u *User) CreateUser(DB *gorm.DB) (*User, error) {
 	err := DB.Create(&u).Error
 	if err != nil {
 		return &User{}, err
@@ -52,7 +52,7 @@ func (u *User) BeforeCreate() error {
 	return nil
 }
 
-func LoginCheck(email string, password string) (string, error) {
+func LoginCheck(DB *gorm.DB, email string, password string) (string, error) {
 	u := User{}
 	err := DB.Model(User{}).Where("email = ?", email).Take(&u).Error
 	if err != nil {

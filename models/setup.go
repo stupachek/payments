@@ -10,10 +10,9 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var DB *gorm.DB
+func ConnectDataBase() *gorm.DB {
 
-func ConnectDataBase() {
-
+	var DB *gorm.DB
 	err := godotenv.Load(".env")
 
 	if err != nil {
@@ -37,5 +36,6 @@ func ConnectDataBase() {
 	}
 
 	DB.AutoMigrate(&User{})
+	return DB
 
 }
