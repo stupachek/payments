@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/matthewhartstonge/argon2"
 )
@@ -19,11 +20,11 @@ func GetEmail(token string) (string, bool) {
 }
 
 type User struct {
-	ID        int
-	FisrtName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
+	UUID      uuid.UUID `json:"uuid"`
+	FisrtName string    `json:"firstName"`
+	LastName  string    `json:"lastName"`
+	Email     string    `json:"email"`
+	Password  string    `json:"password"`
 }
 
 func (u *User) Register() error {
@@ -35,6 +36,10 @@ func (u *User) Register() error {
 		return err
 	}
 	u.Password = string(hashedPasword)
+	u.UUID, err = uuid.NewRandom()
+	if err != nil {
+		return err
+	}
 	u.FisrtName = strings.TrimSpace(u.FisrtName)
 	u.LastName = strings.TrimSpace(u.LastName)
 	u.Email = strings.TrimSpace(u.Email)
