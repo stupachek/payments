@@ -6,7 +6,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	"github.com/matthewhartstonge/argon2"
 )
@@ -20,31 +19,21 @@ func GetEmail(token string) (string, bool) {
 }
 
 type User struct {
-	gorm.Model
-	UUID      uuid.UUID `json:"uuid" gorm:"type:uuid"`
-	FisrtName string    `json:"firstName" gorm:"size:50;not null"`
-	LastName  string    `json:"lastName" gorm:"size:50;not null"`
-	Email     string    `json:"email" gorm:"size:255;not null;unique"`
-	Password  string    `json:"password" gorm:"size:250;not null"`
+	ID        int
+	FisrtName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
 }
 
-func (u *User) CreateUser(DB *gorm.DB) (*User, error) {
-	err := DB.Create(&u).Error
-	if err != nil {
-		return &User{}, err
-	}
-	return u, nil
-}
-
-// Function called automatically before CreateUser()
-func (u *User) BeforeCreate() error {
+func (u *User) Register() error {
 	argon := argon2.DefaultConfig()
 
 	hashedPasword, err := argon.HashEncoded([]byte(u.Password))
+	u.Password = ""
 	if err != nil {
 		return err
 	}
-	u.UUID = uuid.New()
 	u.Password = string(hashedPasword)
 	u.FisrtName = strings.TrimSpace(u.FisrtName)
 	u.LastName = strings.TrimSpace(u.LastName)
