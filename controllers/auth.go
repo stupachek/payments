@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"net/http"
+	"pay/core"
 	"pay/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 type RegisterInput struct {
@@ -16,7 +16,13 @@ type RegisterInput struct {
 }
 
 type Controller struct {
-	DB *gorm.DB
+	System core.PaymentSystem
+}
+
+func NewHttpController(system core.PaymentSystem) Controller {
+	return Controller{
+		System: system,
+	}
 }
 
 func (c *Controller) Register(ctx *gin.Context) {
@@ -32,7 +38,7 @@ func (c *Controller) Register(ctx *gin.Context) {
 		Email:     input.Email,
 		Password:  input.Password,
 	}
-	_, err := user.CreateUser(c.DB)
+	err := c.System.Register(ctx, &user)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

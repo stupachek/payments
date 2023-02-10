@@ -5,10 +5,20 @@ import (
 	"log"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
 )
+
+type GormUser struct {
+	gorm.Model
+	UUID      uuid.UUID `json:"uuid" gorm:"type:uuid"`
+	FisrtName string    `json:"firstName" gorm:"size:50;not null"`
+	LastName  string    `json:"lastName" gorm:"size:50;not null"`
+	Email     string    `json:"email" gorm:"size:255;not null;unique"`
+	Password  string    `json:"password" gorm:"size:250;not null"`
+}
 
 func ConnectDataBase() *gorm.DB {
 
@@ -35,7 +45,7 @@ func ConnectDataBase() *gorm.DB {
 		log.Println("We are connected to the database ", Dbdriver)
 	}
 
-	DB.AutoMigrate(&User{})
+	DB.AutoMigrate(&GormUser{})
 	return DB
 
 }

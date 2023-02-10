@@ -1,6 +1,9 @@
 package core
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"errors"
 	"pay/models"
 	"pay/repository"
 	"strings"
@@ -10,17 +13,25 @@ import (
 	"github.com/matthewhartstonge/argon2"
 )
 
+var Tokens = make(map[string]string)
+var ErrUnauthenticated = errors.New("unauthenticated")
+
+func GetEmail(token string) (string, bool) {
+	email, ok := Tokens[token]
+	return email, ok
+}
+
 type PaymentSystem struct {
-	userRepo repository.UserRepository
+	UserRepo repository.UserRepository
 }
 
 func NewPaymentSystem(userRepo repository.UserRepository) PaymentSystem {
 	return PaymentSystem{
-		userRepo: userRepo,
+		UserRepo: userRepo,
 	}
 }
 
-func (p PaymentSystem) Register(ctx *gin.Context, user models.User) error {
+func (p PaymentSystem) Register(ctx *gin.Context, user *models.User) error {
 	argon := argon2.DefaultConfig()
 
 	hashedPasword, err := argon.HashEncoded([]byte(user.Password))
@@ -36,6 +47,34 @@ func (p PaymentSystem) Register(ctx *gin.Context, user models.User) error {
 	user.FisrtName = strings.TrimSpace(user.FisrtName)
 	user.LastName = strings.TrimSpace(user.LastName)
 	user.Email = strings.TrimSpace(user.Email)
-	err = p.userRepo.CreateUser(ctx, user)
+	err = p.UserRepo.CreateUser(ctx, user)
 	return err
+}
+
+func (p PaymentSystem) LoginCheck(ctx *gin.Context, email string, password string) (string, error) {
+	u, err := p.UserRepo.GetUserEmail(ctx, email)
+	if err != nil {
+		return "", err
+	}
+	ok, err := argon2.VerifyEncoded([]byte(password), []byte(u.Password))
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		return "", ErrUnauthenticated
+	}
+	token, err := randToken(32)
+	if err != nil {
+		return "", err
+	}
+	Tokens[token] = email
+	return token, nil
+}
+
+func randToken(n int) (string, error) {
+	bytes := make([]byte, n)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }

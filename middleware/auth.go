@@ -4,18 +4,24 @@ import (
 	"net/http"
 	"pay/controllers"
 	_ "pay/controllers"
-	"pay/models"
+	"pay/core"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 var UnauthenticatedError = gin.H{"error": "unauthenticated"}
 
 func Auth(c controllers.Controller) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		u := models.User{}
-		uuid := ctx.Param("user_uuid")
-		err := c.DB.Model(models.User{}).Where("UUID = ?", uuid).Take(&u).Error
+		UUIDstr := ctx.Param("user_uuid")
+		UUID, err := uuid.FromBytes([]byte(UUIDstr))
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, UnauthenticatedError)
+			ctx.Abort()
+			return
+		}
+		user, err := c.System.UserRepo.GetUserUUID(ctx, UUID)
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, UnauthenticatedError)
 			ctx.Abort()
@@ -27,13 +33,13 @@ func Auth(c controllers.Controller) gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		email, ok := models.GetEmail(userTok)
+		email, ok := core.GetEmail(userTok)
 		if !ok {
 			ctx.JSON(http.StatusUnauthorized, UnauthenticatedError)
 			ctx.Abort()
 			return
 		}
-		if email != u.Email {
+		if email != user.Email {
 			ctx.JSON(http.StatusUnauthorized, UnauthenticatedError)
 			ctx.Abort()
 			return
