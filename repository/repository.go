@@ -24,8 +24,8 @@ type UserTestRepo struct {
 }
 
 func (u *UserPostgresRepo) GetUserByUUID(ctx *gin.Context, uuid uuid.UUID) (models.User, error) {
-	userGorm := models.GormUser{}
-	err := u.DB.Model(models.GormUser{}).Where("UUID = ?", uuid).Take(&userGorm).Error
+	userGorm := GormUser{}
+	err := u.DB.Model(GormUser{}).Where("UUID = ?", uuid).Take(&userGorm).Error
 	if err != nil {
 		return models.User{}, err
 	}
@@ -48,8 +48,8 @@ func (u *UserTestRepo) GetUserByUUID(ctx *gin.Context, uuid uuid.UUID) (models.U
 }
 
 func (u *UserPostgresRepo) GetUserByEmail(ctx *gin.Context, email string) (models.User, error) {
-	userGorm := models.GormUser{}
-	err := u.DB.Model(models.GormUser{}).Where("email = ?", email).Take(&userGorm).Error
+	userGorm := GormUser{}
+	err := u.DB.Model(GormUser{}).Where("email = ?", email).Take(&userGorm).Error
 	if err != nil {
 		return models.User{}, err
 	}
@@ -83,7 +83,7 @@ func (u *UserTestRepo) CreateUser(ctx *gin.Context, user *models.User) error {
 
 func (u *UserPostgresRepo) CreateUser(ctx *gin.Context, user *models.User) error {
 
-	gormU := models.GormUser{
+	gormU := GormUser{
 		Model:     gorm.Model{},
 		UUID:      user.UUID,
 		FisrtName: user.FisrtName,
