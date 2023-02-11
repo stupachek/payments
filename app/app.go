@@ -5,28 +5,25 @@ import (
 	"pay/middleware"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 )
 
 type App struct {
-	DB     *gorm.DB
-	Router *gin.Engine
+	controller controllers.Controller
+	Router     *gin.Engine
 }
 
-func New(DB *gorm.DB) *App {
+func New(c controllers.Controller) *App {
 	r := gin.Default()
 	public := r.Group("/users")
-	c := controllers.Controller{
-		DB: DB,
-	}
+
 	public.POST("/register", c.Register)
 	public.POST("/login", c.Login)
 
 	user := public.Group("/:user_uuid").Use(middleware.Auth(c))
 	user.GET("/hello", controllers.Hello)
 	return &App{
-		DB:     DB,
-		Router: r,
+		controller: c,
+		Router:     r,
 	}
 }
 

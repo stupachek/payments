@@ -22,7 +22,7 @@ func (c *Controller) Login(ctx *gin.Context) {
 		Email:    input.Email,
 		Password: input.Password,
 	}
-	token, err := models.LoginCheck(c.DB, u.Email, u.Password)
+	token, err := c.System.LoginCheck(u.Email, u.Password)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
