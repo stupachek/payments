@@ -11,8 +11,8 @@ import (
 
 type UserRepository interface {
 	CreateUser(ctx *gin.Context, user *models.User) error
-	GetUserEmail(ctx *gin.Context, email string) (models.User, error)
-	GetUserUUID(ctx *gin.Context, uuid uuid.UUID) (models.User, error)
+	GetUserByEmail(ctx *gin.Context, email string) (models.User, error)
+	GetUserByUUID(ctx *gin.Context, uuid uuid.UUID) (models.User, error)
 }
 
 type UserPostgresRepo struct {
@@ -23,7 +23,7 @@ type UserTestRepo struct {
 	Users map[uuid.UUID]models.User
 }
 
-func (u *UserPostgresRepo) GetUserUUID(ctx *gin.Context, uuid uuid.UUID) (models.User, error) {
+func (u *UserPostgresRepo) GetUserByUUID(ctx *gin.Context, uuid uuid.UUID) (models.User, error) {
 	userGorm := models.GormUser{}
 	err := u.DB.Model(models.GormUser{}).Where("UUID = ?", uuid).Take(&userGorm).Error
 	if err != nil {
@@ -39,7 +39,7 @@ func (u *UserPostgresRepo) GetUserUUID(ctx *gin.Context, uuid uuid.UUID) (models
 	return user, nil
 }
 
-func (u *UserTestRepo) GetUserUUID(ctx *gin.Context, uuid uuid.UUID) (models.User, error) {
+func (u *UserTestRepo) GetUserByUUID(ctx *gin.Context, uuid uuid.UUID) (models.User, error) {
 	user, ok := u.Users[uuid]
 	if !ok {
 		return models.User{}, errors.New("user does not exist")
@@ -47,7 +47,7 @@ func (u *UserTestRepo) GetUserUUID(ctx *gin.Context, uuid uuid.UUID) (models.Use
 	return user, nil
 }
 
-func (u *UserPostgresRepo) GetUserEmail(ctx *gin.Context, email string) (models.User, error) {
+func (u *UserPostgresRepo) GetUserByEmail(ctx *gin.Context, email string) (models.User, error) {
 	userGorm := models.GormUser{}
 	err := u.DB.Model(models.GormUser{}).Where("email = ?", email).Take(&userGorm).Error
 	if err != nil {
@@ -63,7 +63,7 @@ func (u *UserPostgresRepo) GetUserEmail(ctx *gin.Context, email string) (models.
 	return user, nil
 }
 
-func (u *UserTestRepo) GetUserEmail(ctx *gin.Context, email string) (models.User, error) {
+func (u *UserTestRepo) GetUserByEmail(ctx *gin.Context, email string) (models.User, error) {
 	for _, user := range u.Users {
 		if user.Email == "email" {
 			return user, nil

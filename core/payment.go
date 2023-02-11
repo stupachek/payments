@@ -52,7 +52,7 @@ func (p PaymentSystem) Register(ctx *gin.Context, user *models.User) error {
 }
 
 func (p PaymentSystem) LoginCheck(ctx *gin.Context, email string, password string) (string, error) {
-	u, err := p.UserRepo.GetUserEmail(ctx, email)
+	u, err := p.UserRepo.GetUserByEmail(ctx, email)
 	if err != nil {
 		return "", err
 	}

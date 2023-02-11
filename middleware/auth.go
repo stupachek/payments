@@ -21,7 +21,7 @@ func Auth(c controllers.Controller) gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		user, err := c.System.UserRepo.GetUserUUID(ctx, UUID)
+		user, err := c.System.UserRepo.GetUserByUUID(ctx, UUID)
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, UnauthenticatedError)
 			ctx.Abort()
