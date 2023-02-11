@@ -72,7 +72,7 @@ func (u *UserPostgresRepo) GetUserByEmail(email string) (models.User, error) {
 
 func (u *UserTestRepo) GetUserByEmail(email string) (models.User, error) {
 	for _, user := range u.Users {
-		if user.Email == "email" {
+		if user.Email == email {
 			return user, nil
 		}
 	}
