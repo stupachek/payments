@@ -1,13 +1,8 @@
 package models
 
 import (
-	"errors"
-
 	"github.com/google/uuid"
 )
-
-var Tokens = make(map[string]string)
-var ErrUnauthenticated = errors.New("unauthenticated")
 
 type User struct {
 	UUID      uuid.UUID `json:"uuid"`
