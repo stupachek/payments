@@ -4,15 +4,14 @@ import (
 	"errors"
 	"pay/models"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 )
 
 type UserRepository interface {
-	CreateUser(ctx *gin.Context, user *models.User) error
-	GetUserByEmail(ctx *gin.Context, email string) (models.User, error)
-	GetUserByUUID(ctx *gin.Context, uuid uuid.UUID) (models.User, error)
+	CreateUser(user *models.User) error
+	GetUserByEmail(email string) (models.User, error)
+	GetUserByUUID(uuid uuid.UUID) (models.User, error)
 }
 
 type UserPostgresRepo struct {
@@ -23,7 +22,7 @@ type UserTestRepo struct {
 	Users map[uuid.UUID]models.User
 }
 
-func (u *UserPostgresRepo) GetUserByUUID(ctx *gin.Context, uuid uuid.UUID) (models.User, error) {
+func (u *UserPostgresRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
 	userGorm := GormUser{}
 	err := u.DB.Model(GormUser{}).Where("UUID = ?", uuid).Take(&userGorm).Error
 	if err != nil {
@@ -39,7 +38,7 @@ func (u *UserPostgresRepo) GetUserByUUID(ctx *gin.Context, uuid uuid.UUID) (mode
 	return user, nil
 }
 
-func (u *UserTestRepo) GetUserByUUID(ctx *gin.Context, uuid uuid.UUID) (models.User, error) {
+func (u *UserTestRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
 	user, ok := u.Users[uuid]
 	if !ok {
 		return models.User{}, errors.New("user does not exist")
@@ -47,7 +46,7 @@ func (u *UserTestRepo) GetUserByUUID(ctx *gin.Context, uuid uuid.UUID) (models.U
 	return user, nil
 }
 
-func (u *UserPostgresRepo) GetUserByEmail(ctx *gin.Context, email string) (models.User, error) {
+func (u *UserPostgresRepo) GetUserByEmail(email string) (models.User, error) {
 	userGorm := GormUser{}
 	err := u.DB.Model(GormUser{}).Where("email = ?", email).Take(&userGorm).Error
 	if err != nil {
@@ -63,7 +62,7 @@ func (u *UserPostgresRepo) GetUserByEmail(ctx *gin.Context, email string) (model
 	return user, nil
 }
 
-func (u *UserTestRepo) GetUserByEmail(ctx *gin.Context, email string) (models.User, error) {
+func (u *UserTestRepo) GetUserByEmail(email string) (models.User, error) {
 	for _, user := range u.Users {
 		if user.Email == "email" {
 			return user, nil
@@ -72,7 +71,7 @@ func (u *UserTestRepo) GetUserByEmail(ctx *gin.Context, email string) (models.Us
 	return models.User{}, errors.New("user does not exist")
 }
 
-func (u *UserTestRepo) CreateUser(ctx *gin.Context, user *models.User) error {
+func (u *UserTestRepo) CreateUser(user *models.User) error {
 	_, ok := u.Users[user.UUID]
 	if !ok {
 		u.Users[user.UUID] = *user
@@ -81,7 +80,7 @@ func (u *UserTestRepo) CreateUser(ctx *gin.Context, user *models.User) error {
 	return errors.New("user has already created")
 }
 
-func (u *UserPostgresRepo) CreateUser(ctx *gin.Context, user *models.User) error {
+func (u *UserPostgresRepo) CreateUser(user *models.User) error {
 
 	gormU := GormUser{
 		Model:     gorm.Model{},

@@ -38,7 +38,7 @@ func (c *Controller) Register(ctx *gin.Context) {
 		Email:     input.Email,
 		Password:  input.Password,
 	}
-	err := c.System.Register(ctx, &user)
+	err := c.System.Register(&user)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

@@ -20,7 +20,7 @@ func Auth(c controllers.Controller) gin.HandlerFunc {
 			return
 		}
 		token := ctx.GetHeader("Authorization")
-		err = c.System.CheckToken(ctx, UUID, token)
+		err = c.System.CheckToken(UUID, token)
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, UnauthenticatedError)
 			ctx.Abort()

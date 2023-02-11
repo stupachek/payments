@@ -8,7 +8,6 @@ import (
 	"pay/repository"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/matthewhartstonge/argon2"
 )
@@ -31,7 +30,7 @@ func NewPaymentSystem(userRepo repository.UserRepository) PaymentSystem {
 	}
 }
 
-func (p PaymentSystem) Register(ctx *gin.Context, user *models.User) error {
+func (p PaymentSystem) Register(user *models.User) error {
 	argon := argon2.DefaultConfig()
 
 	hashedPasword, err := argon.HashEncoded([]byte(user.Password))
@@ -47,12 +46,12 @@ func (p PaymentSystem) Register(ctx *gin.Context, user *models.User) error {
 	user.FisrtName = strings.TrimSpace(user.FisrtName)
 	user.LastName = strings.TrimSpace(user.LastName)
 	user.Email = strings.TrimSpace(user.Email)
-	err = p.UserRepo.CreateUser(ctx, user)
+	err = p.UserRepo.CreateUser(user)
 	return err
 }
 
-func (p PaymentSystem) LoginCheck(ctx *gin.Context, email string, password string) (string, error) {
-	u, err := p.UserRepo.GetUserByEmail(ctx, email)
+func (p PaymentSystem) LoginCheck(email string, password string) (string, error) {
+	u, err := p.UserRepo.GetUserByEmail(email)
 	if err != nil {
 		return "", err
 	}
@@ -79,8 +78,8 @@ func randToken(n int) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-func (p PaymentSystem) CheckToken(ctx *gin.Context, UUID uuid.UUID, token string) error {
-	user, err := p.UserRepo.GetUserByUUID(ctx, UUID)
+func (p PaymentSystem) CheckToken(UUID uuid.UUID, token string) error {
+	user, err := p.UserRepo.GetUserByUUID(UUID)
 	if err != nil {
 		return ErrUnauthenticated
 	}
