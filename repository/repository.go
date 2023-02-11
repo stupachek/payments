@@ -22,6 +22,12 @@ type UserTestRepo struct {
 	Users map[uuid.UUID]models.User
 }
 
+func NewTestRepo(users map[uuid.UUID]models.User) UserTestRepo {
+	return UserTestRepo{
+		Users: users,
+	}
+}
+
 func (u *UserPostgresRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
 	userGorm := GormUser{}
 	err := u.DB.Model(GormUser{}).Where("UUID = ?", uuid).Take(&userGorm).Error
