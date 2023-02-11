@@ -95,7 +95,7 @@ func TestLogin(t *testing.T) {
 	system := NewPaymentSystem(&userRepo)
 	system.Register(&models.User{
 		FisrtName: "Bob",
-		LastName:  "Right",
+		LastName:  "Black",
 		Email:     "bob.black@gmail.com",
 		Password:  "bob123",
 	})
@@ -107,4 +107,83 @@ func TestLogin(t *testing.T) {
 		})
 	}
 
+}
+
+func TestTokenSuccess(t *testing.T) {
+	users := make(map[uuid.UUID]models.User)
+	userRepo := repository.NewTestRepo(users)
+	system := NewPaymentSystem(&userRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	token, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	if err = system.CheckToken(bob.UUID, token); err != nil {
+		t.Errorf("token error: %v", err)
+	}
+}
+
+func TestTokenWrongToken(t *testing.T) {
+	users := make(map[uuid.UUID]models.User)
+	userRepo := repository.NewTestRepo(users)
+	system := NewPaymentSystem(&userRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	if _, err := system.LoginCheck("bob.black@gmail.com", "bob123"); err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	wrongToken := "c521d0ac2fbea2c9970ac267b5052c55ffba8a2280337bc67334ee218a927d78"
+	if err := system.CheckToken(bob.UUID, wrongToken); !assert.IsEqual(err, ErrUnauthenticated) {
+		t.Errorf("token error: %v", err)
+	}
+}
+
+func TestTokenWrongUser(t *testing.T) {
+	users := make(map[uuid.UUID]models.User)
+	userRepo := repository.NewTestRepo(users)
+	system := NewPaymentSystem(&userRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	alice := &models.User{
+		FisrtName: "Alice",
+		LastName:  "Black",
+		Email:     "alice.black@gmail.com",
+		Password:  "alice123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	if err := system.Register(alice); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	tokenAlice, err := system.LoginCheck("alice.black@gmail.com", "alice123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	if err := system.CheckToken(bob.UUID, tokenAlice); !assert.IsEqual(err, ErrUnauthenticated) {
+		t.Errorf("token error: %v", err)
+	}
 }
