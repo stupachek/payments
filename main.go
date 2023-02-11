@@ -4,12 +4,11 @@ import (
 	"pay/app"
 	"pay/controllers"
 	"pay/core"
-	"pay/models"
 	"pay/repository"
 )
 
 func main() {
-	DB := models.ConnectDataBase()
+	DB := repository.ConnectDataBase()
 	userRepo := repository.NewGormUserRepo(DB)
 	system := core.NewPaymentSystem(userRepo)
 	controller := controllers.NewHttpController(system)

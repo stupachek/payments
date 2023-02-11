@@ -3,7 +3,6 @@ package middleware
 import (
 	"net/http"
 	"pay/controllers"
-	_ "pay/controllers"
 	"pay/core"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +14,7 @@ var UnauthenticatedError = gin.H{"error": "unauthenticated"}
 func Auth(c controllers.Controller) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		UUIDstr := ctx.Param("user_uuid")
-		UUID, err := uuid.FromBytes([]byte(UUIDstr))
+		UUID, err := uuid.Parse(UUIDstr)
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, UnauthenticatedError)
 			ctx.Abort()
