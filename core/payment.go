@@ -78,3 +78,21 @@ func randToken(n int) (string, error) {
 	}
 	return hex.EncodeToString(bytes), nil
 }
+
+func (p PaymentSystem) CheckToken(ctx *gin.Context, UUID uuid.UUID, token string) error {
+	user, err := p.UserRepo.GetUserByUUID(ctx, UUID)
+	if err != nil {
+		return ErrUnauthenticated
+	}
+	if token == "" {
+		return ErrUnauthenticated
+	}
+	email, ok := GetEmail(token)
+	if !ok {
+		return ErrUnauthenticated
+	}
+	if email != user.Email {
+		return ErrUnauthenticated
+	}
+	return nil
+}
