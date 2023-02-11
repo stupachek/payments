@@ -53,18 +53,18 @@ func (p PaymentSystem) Register(user *models.User) error {
 func (p PaymentSystem) LoginCheck(email string, password string) (string, error) {
 	u, err := p.UserRepo.GetUserByEmail(email)
 	if err != nil {
-		return "", err
+		return "", ErrUnauthenticated
 	}
 	ok, err := argon2.VerifyEncoded([]byte(password), []byte(u.Password))
 	if err != nil {
-		return "", err
+		return "", ErrUnauthenticated
 	}
 	if !ok {
 		return "", ErrUnauthenticated
 	}
 	token, err := randToken(32)
 	if err != nil {
-		return "", err
+		return "", ErrUnauthenticated
 	}
 	Tokens[token] = email
 	return token, nil
