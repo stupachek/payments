@@ -8,6 +8,8 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+var ErrorCreated = errors.New("user has already created")
+
 type UserRepository interface {
 	CreateUser(user *models.User) error
 	GetUserByEmail(email string) (models.User, error)
@@ -80,10 +82,23 @@ func (u *UserTestRepo) GetUserByEmail(email string) (models.User, error) {
 func (u *UserTestRepo) CreateUser(user *models.User) error {
 	_, ok := u.Users[user.UUID]
 	if !ok {
+		err := u.CheckIfExist(user)
+		if err != nil {
+			return err
+		}
 		u.Users[user.UUID] = *user
 		return nil
 	}
-	return errors.New("user has already created")
+	return ErrorCreated
+}
+
+func (u *UserTestRepo) CheckIfExist(user *models.User) error {
+	for _, us := range u.Users {
+		if us.Email == user.Email {
+			return ErrorCreated
+		}
+	}
+	return nil
 }
 
 func (u *UserPostgresRepo) CreateUser(user *models.User) error {
