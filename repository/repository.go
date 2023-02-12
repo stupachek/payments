@@ -15,6 +15,7 @@ type UserRepository interface {
 	GetUserByEmail(email string) (models.User, error)
 	GetUserByUUID(uuid uuid.UUID) (models.User, error)
 	CreateAccount(account *models.Account) error
+	GetAccounts(uuid uuid.UUID) ([]models.Account, error)
 }
 
 type PostgresRepo struct {
@@ -62,6 +63,22 @@ func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
 	return user, nil
 }
 
+func (p *PostgresRepo) GetAccounts(uuid uuid.UUID) ([]models.Account, error) {
+	user, err := p.GetUserByUUID(uuid)
+	if err != nil {
+		return []models.Account{}, err
+	}
+	return user.Accounts, nil
+}
+
+func (t *TestRepo) GetAccounts(uuid uuid.UUID) ([]models.Account, error) {
+	user, err := t.GetUserByUUID(uuid)
+	if err != nil {
+		return []models.Account{}, err
+	}
+	return user.Accounts, nil
+}
+
 func (p *TestRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
 	user, ok := p.Users[uuid]
 	if !ok {
@@ -101,9 +118,20 @@ func (t *TestRepo) CreateAccount(account *models.Account) error {
 	_, ok := t.Accounts[account.UUID]
 	if !ok {
 		t.Accounts[account.UUID] = *account
+		user := t.getUserById(account.UserId)
+		user.Accounts = append(user.Accounts, *account)
 		return nil
 	}
 	return ErrorCreated
+}
+
+func (t *TestRepo) getUserById(ID uint) *models.User {
+	for _, user := range t.Users {
+		if user.ID == ID {
+			return &user
+		}
+	}
+	return &models.User{}
 }
 
 func (t *TestRepo) CreateUser(user *models.User) error {
