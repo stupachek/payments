@@ -26,7 +26,8 @@ func TestRegister(t *testing.T) {
 		},
 	}
 	users := make(map[uuid.UUID]models.User)
-	userRepo := repository.NewTestRepo(users)
+	accounts := make(map[uuid.UUID]models.Account)
+	userRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&userRepo)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -40,7 +41,8 @@ func TestRegister(t *testing.T) {
 
 func TestRegisterFailed(t *testing.T) {
 	users := make(map[uuid.UUID]models.User)
-	userRepo := repository.NewTestRepo(users)
+	accounts := make(map[uuid.UUID]models.Account)
+	userRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&userRepo)
 	user1 := models.User{
 		FisrtName: "Bob",
@@ -91,7 +93,8 @@ func TestLogin(t *testing.T) {
 		},
 	}
 	users := make(map[uuid.UUID]models.User)
-	userRepo := repository.NewTestRepo(users)
+	accounts := make(map[uuid.UUID]models.Account)
+	userRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&userRepo)
 	system.Register(&models.User{
 		FisrtName: "Bob",
@@ -111,7 +114,8 @@ func TestLogin(t *testing.T) {
 
 func TestTokenSuccess(t *testing.T) {
 	users := make(map[uuid.UUID]models.User)
-	userRepo := repository.NewTestRepo(users)
+	accounts := make(map[uuid.UUID]models.Account)
+	userRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&userRepo)
 	bob := &models.User{
 		FisrtName: "Bob",
@@ -133,7 +137,8 @@ func TestTokenSuccess(t *testing.T) {
 
 func TestTokenWrongToken(t *testing.T) {
 	users := make(map[uuid.UUID]models.User)
-	userRepo := repository.NewTestRepo(users)
+	accounts := make(map[uuid.UUID]models.Account)
+	userRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&userRepo)
 	bob := &models.User{
 		FisrtName: "Bob",
@@ -155,7 +160,8 @@ func TestTokenWrongToken(t *testing.T) {
 
 func TestTokenWrongUser(t *testing.T) {
 	users := make(map[uuid.UUID]models.User)
-	userRepo := repository.NewTestRepo(users)
+	accounts := make(map[uuid.UUID]models.Account)
+	userRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&userRepo)
 	bob := &models.User{
 		FisrtName: "Bob",

@@ -16,27 +16,47 @@ type UserRepository interface {
 	GetUserByUUID(uuid uuid.UUID) (models.User, error)
 }
 
-type UserPostgresRepo struct {
+type AccountRepository interface {
+	CreateAccount(account models.Account) error
+}
+
+type PostgresRepo struct {
 	DB *gorm.DB
 }
 
-type UserTestRepo struct {
-	Users map[uuid.UUID]models.User
+type TestRepo struct {
+	Users    map[uuid.UUID]models.User
+	Accounts map[uuid.UUID]models.Account
 }
 
-func NewTestRepo(users map[uuid.UUID]models.User) UserTestRepo {
-	return UserTestRepo{
-		Users: users,
+func (p *PostgresRepo) CreateAccount(account models.Account) error {
+	gormAcc := GormAccount{
+		UUID:    account.UUID,
+		IBAN:    account.IBAN,
+		Balance: account.Balance,
+		UserId:  account.UserId,
+	}
+	err := p.DB.Create(&gormAcc).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func NewTestRepo(users map[uuid.UUID]models.User, accounts map[uuid.UUID]models.Account) TestRepo {
+	return TestRepo{
+		Users:    users,
+		Accounts: accounts,
 	}
 }
 
-func (u *UserPostgresRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
+func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
 	userGorm := GormUser{}
-	err := u.DB.Model(GormUser{}).Where("UUID = ?", uuid).Take(&userGorm).Error
+	err := p.DB.Model(GormUser{}).Where("UUID = ?", uuid).Take(&userGorm).Error
 	if err != nil {
 		return models.User{}, err
 	}
 	user := models.User{
+		ID:        userGorm.ID,
 		UUID:      userGorm.UUID,
 		FisrtName: userGorm.FisrtName,
 		LastName:  userGorm.LastName,
@@ -46,21 +66,22 @@ func (u *UserPostgresRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
 	return user, nil
 }
 
-func (u *UserTestRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
-	user, ok := u.Users[uuid]
+func (p *TestRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
+	user, ok := p.Users[uuid]
 	if !ok {
 		return models.User{}, errors.New("user does not exist")
 	}
 	return user, nil
 }
 
-func (u *UserPostgresRepo) GetUserByEmail(email string) (models.User, error) {
+func (p *PostgresRepo) GetUserByEmail(email string) (models.User, error) {
 	userGorm := GormUser{}
-	err := u.DB.Model(GormUser{}).Where("email = ?", email).Take(&userGorm).Error
+	err := p.DB.Model(GormUser{}).Where("email = ?", email).Take(&userGorm).Error
 	if err != nil {
 		return models.User{}, err
 	}
 	user := models.User{
+		ID:        userGorm.ID,
 		UUID:      userGorm.UUID,
 		FisrtName: userGorm.FisrtName,
 		LastName:  userGorm.LastName,
@@ -70,8 +91,8 @@ func (u *UserPostgresRepo) GetUserByEmail(email string) (models.User, error) {
 	return user, nil
 }
 
-func (u *UserTestRepo) GetUserByEmail(email string) (models.User, error) {
-	for _, user := range u.Users {
+func (t *TestRepo) GetUserByEmail(email string) (models.User, error) {
+	for _, user := range t.Users {
 		if user.Email == email {
 			return user, nil
 		}
@@ -79,21 +100,21 @@ func (u *UserTestRepo) GetUserByEmail(email string) (models.User, error) {
 	return models.User{}, errors.New("user does not exist")
 }
 
-func (u *UserTestRepo) CreateUser(user *models.User) error {
-	_, ok := u.Users[user.UUID]
+func (t *TestRepo) CreateUser(user *models.User) error {
+	_, ok := t.Users[user.UUID]
 	if !ok {
-		err := u.CheckIfExist(user)
+		err := t.CheckIfExist(user)
 		if err != nil {
 			return err
 		}
-		u.Users[user.UUID] = *user
+		t.Users[user.UUID] = *user
 		return nil
 	}
 	return ErrorCreated
 }
 
-func (u *UserTestRepo) CheckIfExist(user *models.User) error {
-	for _, us := range u.Users {
+func (t *TestRepo) CheckIfExist(user *models.User) error {
+	for _, us := range t.Users {
 		if us.Email == user.Email {
 			return ErrorCreated
 		}
@@ -101,7 +122,7 @@ func (u *UserTestRepo) CheckIfExist(user *models.User) error {
 	return nil
 }
 
-func (u *UserPostgresRepo) CreateUser(user *models.User) error {
+func (p *PostgresRepo) CreateUser(user *models.User) error {
 
 	gormU := GormUser{
 		Model:     gorm.Model{},
@@ -111,7 +132,7 @@ func (u *UserPostgresRepo) CreateUser(user *models.User) error {
 		Email:     user.Email,
 		Password:  user.Password,
 	}
-	err := u.DB.Create(&gormU).Error
+	err := p.DB.Create(&gormU).Error
 	if err != nil {
 		return err
 	}
@@ -119,7 +140,7 @@ func (u *UserPostgresRepo) CreateUser(user *models.User) error {
 }
 
 func NewGormUserRepo(DB *gorm.DB) UserRepository {
-	return &UserPostgresRepo{
+	return &PostgresRepo{
 		DB: DB,
 	}
 }

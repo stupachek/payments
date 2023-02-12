@@ -13,19 +13,30 @@ import (
 
 type GormUser struct {
 	gorm.Model
-	UUID      uuid.UUID `json:"uuid" gorm:"type:uuid"`
-	FisrtName string    `json:"firstName" gorm:"size:50;not null"`
-	LastName  string    `json:"lastName" gorm:"size:50;not null"`
-	Email     string    `json:"email" gorm:"size:255;not null;unique"`
-	Password  string    `json:"password" gorm:"size:250;not null"`
+	UUID      uuid.UUID     `json:"uuid" gorm:"type:uuid"`
+	FisrtName string        `json:"firstName" gorm:"size:50;not null"`
+	LastName  string        `json:"lastName" gorm:"size:50;not null"`
+	Email     string        `json:"email" gorm:"size:255;not null;unique"`
+	Password  string        `json:"password" gorm:"size:250;not null"`
+	Accounts  []GormAccount `gorm:"foreingKey:UserId"`
 }
 
 type GormAccount struct {
 	gorm.Model
-	UUID    uuid.UUID `json:"uuid" gorm:"type:uuid"`
-	IBAN    string    `json:"iban" gorm:"size:29;not null;unique"`
-	Balance float64   `json:"balance" gorm:"type:money;not null"`
-	User    GormUser  `json:"user" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	UUID         uuid.UUID `json:"uuid" gorm:"type:uuid"`
+	IBAN         string    `json:"iban" gorm:"size:29;not null;unique"`
+	Balance      float64   `json:"balance" gorm:"type:money;not null"`
+	UserId       uint
+	Sources      []GormTransaction `gorm:"foreingKey:SourceId"`
+	Destinations []GormTransaction `gorm:"foreingKey:DestinationId"`
+}
+
+type GormTransaction struct {
+	gorm.Model
+	UUID          uuid.UUID `json:"uuid" gorm:"type:uuid"`
+	Status        string    `json:"status" gorm:"size:50;not null"`
+	SourceId      uint
+	DestinationId uint
 }
 
 func ConnectDataBase() *gorm.DB {
@@ -53,7 +64,7 @@ func ConnectDataBase() *gorm.DB {
 		log.Println("We are connected to the database ", Dbdriver)
 	}
 
-	DB.AutoMigrate(&GormUser{})
+	DB.AutoMigrate(&GormUser{}, &GormAccount{})
 	return DB
 
 }
