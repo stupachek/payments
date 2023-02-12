@@ -101,11 +101,16 @@ func (p PaymentSystem) NewAccount(userUUID uuid.UUID, account *models.Account) e
 	if err != nil {
 		return err
 	}
+	account.UserId = user.ID
+	account.IBAN, err = randToken(29)
+	if err != nil {
+		return err
+	}
 	account.UUID, err = uuid.NewRandom()
 	if err != nil {
 		return err
 	}
-	err = p.UserRepo.CreateAccount(account, user.ID)
+	err = p.UserRepo.CreateAccount(account)
 	if err != nil {
 		return err
 	}

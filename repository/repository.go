@@ -14,7 +14,7 @@ type UserRepository interface {
 	CreateUser(user *models.User) error
 	GetUserByEmail(email string) (models.User, error)
 	GetUserByUUID(uuid uuid.UUID) (models.User, error)
-	CreateAccount(account *models.Account, userId uint) error
+	CreateAccount(account *models.Account) error
 }
 
 type PostgresRepo struct {
@@ -26,11 +26,10 @@ type TestRepo struct {
 	Accounts map[uuid.UUID]models.Account
 }
 
-func (p *PostgresRepo) CreateAccount(account *models.Account, userId uint) error {
+func (p *PostgresRepo) CreateAccount(account *models.Account) error {
 	gormAcc := GormAccount{
-		UUID:   account.UUID,
-		IBAN:   account.IBAN,
-		UserId: userId,
+		UUID: account.UUID,
+		IBAN: account.IBAN,
 	}
 	err := p.DB.Create(&gormAcc).Error
 	if err != nil {
@@ -96,9 +95,8 @@ func (t *TestRepo) GetUserByEmail(email string) (models.User, error) {
 	return models.User{}, errors.New("user does not exist")
 }
 
-func (t *TestRepo) CreateAccount(account *models.Account, userId uint) error {
+func (t *TestRepo) CreateAccount(account *models.Account) error {
 	_, ok := t.Accounts[account.UUID]
-	account.ID = userId
 	if !ok {
 		t.Accounts[account.UUID] = *account
 		return nil
