@@ -95,3 +95,19 @@ func (p PaymentSystem) CheckToken(UUID uuid.UUID, token string) error {
 	}
 	return nil
 }
+
+func (p PaymentSystem) NewAccount(userUUID uuid.UUID, account *models.Account) error {
+	user, err := p.UserRepo.GetUserByUUID(userUUID)
+	if err != nil {
+		return err
+	}
+	account.UUID, err = uuid.NewRandom()
+	if err != nil {
+		return err
+	}
+	err = p.UserRepo.CreateAccount(account, user.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

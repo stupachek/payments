@@ -21,6 +21,7 @@ func New(c controllers.Controller) *App {
 
 	user := public.Group("/:user_uuid").Use(middleware.Auth(c))
 	user.GET("/hello", controllers.Hello)
+	user.POST("/accounts/new", c.NewAccount)
 	return &App{
 		controller: c,
 		Router:     r,

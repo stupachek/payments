@@ -14,10 +14,7 @@ type UserRepository interface {
 	CreateUser(user *models.User) error
 	GetUserByEmail(email string) (models.User, error)
 	GetUserByUUID(uuid uuid.UUID) (models.User, error)
-}
-
-type AccountRepository interface {
-	CreateAccount(account models.Account) error
+	CreateAccount(account *models.Account, userId uint) error
 }
 
 type PostgresRepo struct {
@@ -29,12 +26,11 @@ type TestRepo struct {
 	Accounts map[uuid.UUID]models.Account
 }
 
-func (p *PostgresRepo) CreateAccount(account models.Account) error {
+func (p *PostgresRepo) CreateAccount(account *models.Account, userId uint) error {
 	gormAcc := GormAccount{
-		UUID:    account.UUID,
-		IBAN:    account.IBAN,
-		Balance: account.Balance,
-		UserId:  account.UserId,
+		UUID:   account.UUID,
+		IBAN:   account.IBAN,
+		UserId: userId,
 	}
 	err := p.DB.Create(&gormAcc).Error
 	if err != nil {
@@ -100,10 +96,20 @@ func (t *TestRepo) GetUserByEmail(email string) (models.User, error) {
 	return models.User{}, errors.New("user does not exist")
 }
 
+func (t *TestRepo) CreateAccount(account *models.Account, userId uint) error {
+	_, ok := t.Accounts[account.UUID]
+	account.ID = userId
+	if !ok {
+		t.Accounts[account.UUID] = *account
+		return nil
+	}
+	return ErrorCreated
+}
+
 func (t *TestRepo) CreateUser(user *models.User) error {
 	_, ok := t.Users[user.UUID]
 	if !ok {
-		err := t.CheckIfExist(user)
+		err := t.CheckIfExistUser(user)
 		if err != nil {
 			return err
 		}
@@ -113,7 +119,7 @@ func (t *TestRepo) CreateUser(user *models.User) error {
 	return ErrorCreated
 }
 
-func (t *TestRepo) CheckIfExist(user *models.User) error {
+func (t *TestRepo) CheckIfExistUser(user *models.User) error {
 	for _, us := range t.Users {
 		if us.Email == user.Email {
 			return ErrorCreated
