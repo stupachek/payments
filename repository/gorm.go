@@ -20,6 +20,14 @@ type GormUser struct {
 	Password  string    `json:"password" gorm:"size:250;not null"`
 }
 
+type GormAccount struct {
+	gorm.Model
+	UUID    uuid.UUID `json:"uuid" gorm:"type:uuid"`
+	IBAN    string    `json:"iban" gorm:"size:29;not null;unique"`
+	Balance float64   `json:"balance" gorm:"type:money;not null"`
+	User    GormUser  `json:"user" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+}
+
 func ConnectDataBase() *gorm.DB {
 
 	var DB *gorm.DB
