@@ -22,8 +22,9 @@ type PostgresRepo struct {
 }
 
 type TestRepo struct {
-	Users    map[uuid.UUID]models.User
-	Accounts map[uuid.UUID]models.Account
+	idCounter uint
+	Users     map[uuid.UUID]models.User
+	Accounts  map[uuid.UUID]models.Account
 }
 
 func (p *PostgresRepo) CreateAccount(account *models.Account) error {
@@ -96,6 +97,7 @@ func (t *TestRepo) GetUserByEmail(email string) (models.User, error) {
 }
 
 func (t *TestRepo) CreateAccount(account *models.Account) error {
+	account.ID = t.nextId()
 	_, ok := t.Accounts[account.UUID]
 	if !ok {
 		t.Accounts[account.UUID] = *account
@@ -105,6 +107,7 @@ func (t *TestRepo) CreateAccount(account *models.Account) error {
 }
 
 func (t *TestRepo) CreateUser(user *models.User) error {
+	user.ID = t.nextId()
 	_, ok := t.Users[user.UUID]
 	if !ok {
 		err := t.CheckIfExistUser(user)
@@ -115,6 +118,11 @@ func (t *TestRepo) CreateUser(user *models.User) error {
 		return nil
 	}
 	return ErrorCreated
+}
+
+func (t *TestRepo) nextId() uint {
+	t.idCounter++
+	return t.idCounter
 }
 
 func (t *TestRepo) CheckIfExistUser(user *models.User) error {
