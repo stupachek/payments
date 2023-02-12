@@ -30,7 +30,7 @@ func NewPaymentSystem(userRepo repository.UserRepository) PaymentSystem {
 	}
 }
 
-func (p PaymentSystem) Register(user *models.User) error {
+func (p *PaymentSystem) Register(user *models.User) error {
 	argon := argon2.DefaultConfig()
 
 	hashedPasword, err := argon.HashEncoded([]byte(user.Password))
@@ -50,7 +50,7 @@ func (p PaymentSystem) Register(user *models.User) error {
 	return err
 }
 
-func (p PaymentSystem) LoginCheck(email string, password string) (string, error) {
+func (p *PaymentSystem) LoginCheck(email string, password string) (string, error) {
 	u, err := p.UserRepo.GetUserByEmail(email)
 	if err != nil {
 		return "", ErrUnauthenticated
@@ -78,7 +78,7 @@ func randToken(n int) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-func (p PaymentSystem) CheckToken(UUID uuid.UUID, token string) error {
+func (p *PaymentSystem) CheckToken(UUID uuid.UUID, token string) error {
 	user, err := p.UserRepo.GetUserByUUID(UUID)
 	if err != nil {
 		return ErrUnauthenticated
@@ -96,7 +96,7 @@ func (p PaymentSystem) CheckToken(UUID uuid.UUID, token string) error {
 	return nil
 }
 
-func (p PaymentSystem) NewAccount(userUUID uuid.UUID, account *models.Account) error {
+func (p *PaymentSystem) NewAccount(userUUID uuid.UUID, account *models.Account) error {
 	user, err := p.UserRepo.GetUserByUUID(userUUID)
 	if err != nil {
 		return err
