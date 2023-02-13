@@ -28,10 +28,28 @@ type TestRepo struct {
 	Accounts  map[uuid.UUID]models.Account
 }
 
+// TODO : transaction
+func fromGormToModelAccount(accounts []GormAccount) []models.Account {
+	modelAccounts := make([]models.Account, len(accounts))
+	for i, acc := range accounts {
+		modelAccounts[i] = models.Account{
+			ID:      acc.ID,
+			UUID:    acc.UUID,
+			IBAN:    acc.IBAN,
+			Balance: acc.Balance,
+			UserId:  acc.UserId,
+		}
+	}
+
+	return modelAccounts
+}
+
 func (p *PostgresRepo) CreateAccount(account *models.Account) error {
 	gormAcc := GormAccount{
-		UUID: account.UUID,
-		IBAN: account.IBAN,
+		UUID:    account.UUID,
+		IBAN:    account.IBAN,
+		Balance: account.Balance,
+		UserId:  account.UserId,
 	}
 	err := p.DB.Create(&gormAcc).Error
 	if err != nil {
@@ -48,7 +66,7 @@ func NewTestRepo(users map[uuid.UUID]models.User, accounts map[uuid.UUID]models.
 
 func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
 	userGorm := GormUser{}
-	err := p.DB.Model(GormUser{}).Where("UUID = ?", uuid).Take(&userGorm).Error
+	err := p.DB.Model(GormUser{}).Where("UUID = ?", uuid).Preload("Accounts").Take(&userGorm).Error
 	if err != nil {
 		return models.User{}, err
 	}
@@ -59,6 +77,7 @@ func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
 		LastName:  userGorm.LastName,
 		Email:     userGorm.Email,
 		Password:  userGorm.Password,
+		Accounts:  fromGormToModelAccount(userGorm.Accounts),
 	}
 	return user, nil
 }
@@ -89,7 +108,7 @@ func (p *TestRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
 
 func (p *PostgresRepo) GetUserByEmail(email string) (models.User, error) {
 	userGorm := GormUser{}
-	err := p.DB.Model(GormUser{}).Where("email = ?", email).Take(&userGorm).Error
+	err := p.DB.Model(GormUser{}).Where("email = ?", email).Preload("Accounts").Take(&userGorm).Error
 	if err != nil {
 		return models.User{}, err
 	}
@@ -100,6 +119,7 @@ func (p *PostgresRepo) GetUserByEmail(email string) (models.User, error) {
 		LastName:  userGorm.LastName,
 		Email:     userGorm.Email,
 		Password:  userGorm.Password,
+		Accounts:  fromGormToModelAccount(userGorm.Accounts),
 	}
 	return user, nil
 }

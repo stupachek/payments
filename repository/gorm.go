@@ -18,17 +18,17 @@ type GormUser struct {
 	LastName  string        `json:"lastName" gorm:"size:50;not null"`
 	Email     string        `json:"email" gorm:"size:255;not null;unique"`
 	Password  string        `json:"password" gorm:"size:250;not null"`
-	Accounts  []GormAccount `gorm:"foreingKey:UserId"`
+	Accounts  []GormAccount `gorm:"foreignKey:UserId"`
 }
 
 type GormAccount struct {
 	gorm.Model
 	UUID         uuid.UUID `json:"uuid" gorm:"type:uuid"`
 	IBAN         string    `json:"iban" gorm:"size:250;not null;unique"`
-	Balance      float64   `json:"balance" gorm:"type:money;not null"`
+	Balance      uint      `json:"balance" gorm:"not null"`
 	UserId       uint
-	Sources      []GormTransaction `gorm:"foreingKey:SourceId"`
-	Destinations []GormTransaction `gorm:"foreingKey:DestinationId"`
+	Sources      []GormTransaction `gorm:"foreignKey:SourceId"`
+	Destinations []GormTransaction `gorm:"foreignKey:DestinationId"`
 }
 
 type GormTransaction struct {
