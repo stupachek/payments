@@ -37,6 +37,7 @@ type GormTransaction struct {
 	Status        string    `json:"status" gorm:"size:50;not null"`
 	SourceId      uint
 	DestinationId uint
+	Money         uint
 }
 
 func ConnectDataBase() *gorm.DB {
