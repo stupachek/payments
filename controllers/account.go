@@ -33,6 +33,6 @@ func (c *Controller) GetAccounts(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "accounts", "uuid": accounts})
+	ctx.JSON(http.StatusOK, gin.H{"accounts": accounts})
 
 }
