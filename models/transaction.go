@@ -9,4 +9,5 @@ type Transaction struct {
 	Status        string    `json:"status"`
 	SourceId      uint      `json:"source_id"`
 	DestinationId uint      `json:"destination_id"`
+	Money         uint      `json:"money"`
 }
