@@ -58,7 +58,9 @@ func (p *PostgresRepo) CreateAccount(account *models.Account) error {
 	}
 	return nil
 }
-func NewTestRepo(users map[uuid.UUID]*models.User, accounts map[uuid.UUID]*models.Account) TestRepo {
+func NewTestRepo() TestRepo {
+	users := make(map[uuid.UUID]*models.User)
+	accounts := make(map[uuid.UUID]*models.Account)
 	return TestRepo{
 		Users:    users,
 		Accounts: accounts,
