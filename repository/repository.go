@@ -25,8 +25,8 @@ type PostgresRepo struct {
 
 type TestRepo struct {
 	idCounter uint
-	Users     map[uuid.UUID]models.User
-	Accounts  map[uuid.UUID]models.Account
+	Users     map[uuid.UUID]*models.User
+	Accounts  map[uuid.UUID]*models.Account
 }
 
 // TODO : transaction
@@ -58,7 +58,7 @@ func (p *PostgresRepo) CreateAccount(account *models.Account) error {
 	}
 	return nil
 }
-func NewTestRepo(users map[uuid.UUID]models.User, accounts map[uuid.UUID]models.Account) TestRepo {
+func NewTestRepo(users map[uuid.UUID]*models.User, accounts map[uuid.UUID]*models.Account) TestRepo {
 	return TestRepo{
 		Users:    users,
 		Accounts: accounts,
@@ -104,7 +104,7 @@ func (p *TestRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 	if !ok {
 		return &models.User{}, ErrorUnknownUser
 	}
-	return &user, nil
+	return user, nil
 }
 
 func (p *PostgresRepo) GetUserByEmail(email string) (*models.User, error) {
@@ -128,7 +128,7 @@ func (p *PostgresRepo) GetUserByEmail(email string) (*models.User, error) {
 func (t *TestRepo) GetUserByEmail(email string) (*models.User, error) {
 	for _, user := range t.Users {
 		if user.Email == email {
-			return &user, nil
+			return user, nil
 		}
 	}
 	return &models.User{}, ErrorUnknownUser
@@ -138,7 +138,7 @@ func (t *TestRepo) CreateAccount(account *models.Account) error {
 	account.ID = t.nextId()
 	_, ok := t.Accounts[account.UUID]
 	if !ok {
-		t.Accounts[account.UUID] = *account
+		t.Accounts[account.UUID] = account
 		user := t.getUserById(account.UserId)
 		user.Accounts = append(user.Accounts, *account)
 		return nil
@@ -149,7 +149,7 @@ func (t *TestRepo) CreateAccount(account *models.Account) error {
 func (t *TestRepo) getUserById(ID uint) *models.User {
 	for _, user := range t.Users {
 		if user.ID == ID {
-			return &user
+			return user
 		}
 	}
 	return &models.User{}
@@ -163,7 +163,7 @@ func (t *TestRepo) CreateUser(user *models.User) error {
 		if err != nil {
 			return err
 		}
-		t.Users[user.UUID] = *user
+		t.Users[user.UUID] = user
 		return nil
 	}
 	return ErrorCreated

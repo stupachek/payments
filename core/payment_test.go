@@ -25,8 +25,8 @@ func TestRegister(t *testing.T) {
 			expErr: nil,
 		},
 	}
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
+	users := make(map[uuid.UUID]*models.User)
+	accounts := make(map[uuid.UUID]*models.Account)
 	testRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&testRepo)
 	for _, tt := range tests {
@@ -40,8 +40,8 @@ func TestRegister(t *testing.T) {
 }
 
 func TestRegisterFailed(t *testing.T) {
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
+	users := make(map[uuid.UUID]*models.User)
+	accounts := make(map[uuid.UUID]*models.Account)
 	testRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&testRepo)
 	user1 := models.User{
@@ -92,8 +92,8 @@ func TestLogin(t *testing.T) {
 			expErr:   ErrUnauthenticated,
 		},
 	}
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
+	users := make(map[uuid.UUID]*models.User)
+	accounts := make(map[uuid.UUID]*models.Account)
 	testRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&testRepo)
 	system.Register(&models.User{
@@ -113,8 +113,8 @@ func TestLogin(t *testing.T) {
 }
 
 func TestTokenSuccess(t *testing.T) {
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
+	users := make(map[uuid.UUID]*models.User)
+	accounts := make(map[uuid.UUID]*models.Account)
 	testRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&testRepo)
 	bob := &models.User{
@@ -136,8 +136,8 @@ func TestTokenSuccess(t *testing.T) {
 }
 
 func TestTokenWrongToken(t *testing.T) {
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
+	users := make(map[uuid.UUID]*models.User)
+	accounts := make(map[uuid.UUID]*models.Account)
 	testRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&testRepo)
 	bob := &models.User{
@@ -159,8 +159,8 @@ func TestTokenWrongToken(t *testing.T) {
 }
 
 func TestTokenWrongUser(t *testing.T) {
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
+	users := make(map[uuid.UUID]*models.User)
+	accounts := make(map[uuid.UUID]*models.Account)
 	testRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&testRepo)
 	bob := &models.User{
@@ -195,8 +195,8 @@ func TestTokenWrongUser(t *testing.T) {
 }
 
 func TestCreateNewAccountSucces(t *testing.T) {
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
+	users := make(map[uuid.UUID]*models.User)
+	accounts := make(map[uuid.UUID]*models.Account)
 	testRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&testRepo)
 	bob := &models.User{
@@ -219,8 +219,8 @@ func TestCreateNewAccountSucces(t *testing.T) {
 }
 
 func TestCreateNewAccountUnknownUser(t *testing.T) {
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
+	users := make(map[uuid.UUID]*models.User)
+	accounts := make(map[uuid.UUID]*models.Account)
 	testRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&testRepo)
 	bob := &models.User{
@@ -236,8 +236,8 @@ func TestCreateNewAccountUnknownUser(t *testing.T) {
 }
 
 func TestGetAccounts(t *testing.T) {
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
+	users := make(map[uuid.UUID]*models.User)
+	accounts := make(map[uuid.UUID]*models.Account)
 	testRepo := repository.NewTestRepo(users, accounts)
 	system := NewPaymentSystem(&testRepo)
 	bob := &models.User{
