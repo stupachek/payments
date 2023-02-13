@@ -37,7 +37,7 @@ func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {
 		Status:        transaction.Status,
 		SourceId:      transaction.SourceId,
 		DestinationId: transaction.DestinationId,
-		Money:         transaction.Money,
+		Amount:        transaction.Amount,
 	}
 	err := p.DB.Create(&gormTransaction).Error
 	if err != nil {
@@ -86,7 +86,7 @@ func fromGormToModelTransaction(transactions []GormTransaction) []models.Transac
 			Status:        tr.Status,
 			SourceId:      tr.SourceId,
 			DestinationId: tr.DestinationId,
-			Money:         tr.Money,
+			Amount:        tr.Amount,
 		}
 	}
 	return modelTransaction
