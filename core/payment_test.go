@@ -212,8 +212,7 @@ func TestCreateNewAccountSucces(t *testing.T) {
 	if err != nil {
 		t.Errorf("login error: %v", err)
 	}
-	account := models.Account{}
-	if err := system.NewAccount(bob.UUID, &account); err != nil {
+	if _, err := system.NewAccount(bob.UUID); err != nil {
 		t.Errorf("create new account error: %v", err)
 	}
 }
@@ -229,8 +228,7 @@ func TestCreateNewAccountUnknownUser(t *testing.T) {
 		Email:     "bob.black@gmail.com",
 		Password:  "bob123",
 	}
-	account := models.Account{}
-	if err := system.NewAccount(bob.UUID, &account); !assert.IsEqual(err, repository.ErrorUnknownUser) {
+	if _, err := system.NewAccount(bob.UUID); !assert.IsEqual(err, repository.ErrorUnknownUser) {
 		t.Errorf("create new account error: %v", err)
 	}
 }
@@ -253,8 +251,7 @@ func TestGetAccounts(t *testing.T) {
 	if err != nil {
 		t.Errorf("login error: %v", err)
 	}
-	account := models.Account{}
-	if err := system.NewAccount(bob.UUID, &account); err != nil {
+	if _, err := system.NewAccount(bob.UUID); err != nil {
 		t.Errorf("create new account error: %v", err)
 	}
 	accs, err := system.GetAccounts(bob.UUID)

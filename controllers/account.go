@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"pay/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -15,8 +14,11 @@ func (c *Controller) NewAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	account := models.Account{}
-	c.System.NewAccount(userUUID, &account)
+	account, err := c.System.NewAccount(userUUID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "new account add", "uuid": account.UUID})
 
 }
