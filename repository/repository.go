@@ -29,20 +29,35 @@ type TestRepo struct {
 	Accounts  map[uuid.UUID]*models.Account
 }
 
-// TODO : transaction
 func fromGormToModelAccount(accounts []GormAccount) []models.Account {
 	modelAccounts := make([]models.Account, len(accounts))
 	for i, acc := range accounts {
 		modelAccounts[i] = models.Account{
-			ID:      acc.ID,
-			UUID:    acc.UUID,
-			IBAN:    acc.IBAN,
-			Balance: acc.Balance,
-			UserId:  acc.UserId,
+			ID:           acc.ID,
+			UUID:         acc.UUID,
+			IBAN:         acc.IBAN,
+			Balance:      acc.Balance,
+			UserId:       acc.UserId,
+			Sources:      fromGormToModelTransaction(acc.Sources),
+			Destinations: fromGormToModelTransaction(acc.Destinations),
 		}
 	}
 
 	return modelAccounts
+}
+
+func fromGormToModelTransaction(transactions []GormTransaction) []models.Transaction {
+	modelTransaction := make([]models.Transaction, len(transactions))
+	for i, tr := range transactions {
+		modelTransaction[i] = models.Transaction{
+			UUID:          tr.UUID,
+			Status:        tr.Status,
+			SourceId:      tr.SourceId,
+			DestinationId: tr.DestinationId,
+			Money:         tr.Money,
+		}
+	}
+	return modelTransaction
 }
 
 func (p *PostgresRepo) CreateAccount(account *models.Account) error {
