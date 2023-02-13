@@ -17,6 +17,7 @@ type UserRepository interface {
 	GetUserByUUID(uuid uuid.UUID) (*models.User, error)
 	CreateAccount(account *models.Account) error
 	GetAccountsForUserWith(uuid uuid.UUID) ([]models.Account, error)
+	CreateTransaction(transaction models.Transaction) error
 }
 
 type PostgresRepo struct {
@@ -24,9 +25,10 @@ type PostgresRepo struct {
 }
 
 type TestRepo struct {
-	idCounter uint
-	Users     map[uuid.UUID]*models.User
-	Accounts  map[uuid.UUID]*models.Account
+	idCounter   uint
+	Users       map[uuid.UUID]*models.User
+	Accounts    map[uuid.UUID]*models.Account
+	Transaction map[uuid.UUID]*models.Transaction
 }
 
 func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {
@@ -42,6 +44,20 @@ func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {
 		return err
 	}
 	return nil
+}
+
+func (p *TestRepo) CreateTransaction(transaction models.Transaction) error {
+	transaction.ID = p.nextId()
+	_, ok := p.Transaction[transaction.UUID]
+	if !ok {
+		p.Transaction[transaction.UUID] = &transaction
+		sourse := p.getUserById(transaction.SourceId)
+		destination := p.getUserById(transaction.DestinationId)
+		p.Accounts[sourse.UUID].Sources = append(p.Accounts[sourse.UUID].Sources, transaction)
+		p.Accounts[destination.UUID].Destinations = append(p.Accounts[destination.UUID].Destinations, transaction)
+		return nil
+	}
+	return ErrorCreated
 }
 
 func fromGormToModelAccount(accounts []GormAccount) []models.Account {
@@ -65,6 +81,7 @@ func fromGormToModelTransaction(transactions []GormTransaction) []models.Transac
 	modelTransaction := make([]models.Transaction, len(transactions))
 	for i, tr := range transactions {
 		modelTransaction[i] = models.Transaction{
+			ID:            tr.ID,
 			UUID:          tr.UUID,
 			Status:        tr.Status,
 			SourceId:      tr.SourceId,
