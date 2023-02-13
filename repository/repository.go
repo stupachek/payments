@@ -10,6 +10,7 @@ import (
 
 var ErrorCreated = errors.New("user has already created")
 var ErrorUnknownUser = errors.New("user does not exist")
+var ErrorUnknownAccount = errors.New("account does not exist")
 
 type UserRepository interface {
 	CreateUser(user *models.User) error
@@ -17,6 +18,7 @@ type UserRepository interface {
 	GetUserByUUID(uuid uuid.UUID) (*models.User, error)
 	CreateAccount(account *models.Account) error
 	GetAccountsForUserWith(uuid uuid.UUID) ([]models.Account, error)
+	GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
 	CreateTransaction(transaction models.Transaction) error
 }
 
@@ -114,6 +116,24 @@ func NewTestRepo() TestRepo {
 	}
 }
 
+func (p *PostgresRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {
+	gormAccount := GormAccount{}
+	err := p.DB.Model(GormAccount{}).Where("UUID = ?", uuid).Preload("Transactions").Take(&gormAccount)
+	if err != nil {
+		return &models.Account{}, nil
+	}
+	account := models.Account{
+		ID:           gormAccount.ID,
+		UUID:         gormAccount.UUID,
+		IBAN:         gormAccount.IBAN,
+		Balance:      gormAccount.Balance,
+		UserId:       gormAccount.UserId,
+		Sources:      fromGormToModelTransaction(gormAccount.Sources),
+		Destinations: fromGormToModelTransaction(gormAccount.Destinations),
+	}
+	return &account, nil
+}
+
 func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 	userGorm := GormUser{}
 	err := p.DB.Model(GormUser{}).Where("UUID = ?", uuid).Preload("Accounts").Take(&userGorm).Error
@@ -154,6 +174,14 @@ func (p *TestRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 		return &models.User{}, ErrorUnknownUser
 	}
 	return user, nil
+}
+
+func (p *TestRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {
+	account, ok := p.Accounts[uuid]
+	if !ok {
+		return &models.Account{}, ErrorUnknownAccount
+	}
+	return account, nil
 }
 
 func (p *PostgresRepo) GetUserByEmail(email string) (*models.User, error) {
