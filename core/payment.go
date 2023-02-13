@@ -96,23 +96,28 @@ func (p *PaymentSystem) CheckToken(UUID uuid.UUID, token string) error {
 	return nil
 }
 
-func (p *PaymentSystem) NewAccount(userUUID uuid.UUID, account *models.Account) error {
+func (p *PaymentSystem) NewAccount(userUUID uuid.UUID) (models.Account, error) {
 	user, err := p.UserRepo.GetUserByUUID(userUUID)
 	if err != nil {
-		return err
+		return models.Account{}, err
 	}
+	account := models.Account{}
 	account.UserId = user.ID
 	account.IBAN, err = randToken(29)
 	if err != nil {
-		return err
+		return models.Account{}, err
 	}
 	account.UUID, err = uuid.NewRandom()
 	if err != nil {
-		return err
+		return models.Account{}, err
 	}
-	err = p.UserRepo.CreateAccount(account)
+	err = p.UserRepo.CreateAccount(&account)
 	if err != nil {
-		return err
+		return models.Account{}, err
 	}
-	return nil
+	return account, err
+}
+
+func (p *PaymentSystem) GetAccounts(userUUID uuid.UUID) ([]models.Account, error) {
+	return p.UserRepo.GetAccountsForUserWith(userUUID)
 }

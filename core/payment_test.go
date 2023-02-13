@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/go-playground/assert/v2"
-	"github.com/google/uuid"
 )
 
 func TestRegister(t *testing.T) {
@@ -25,9 +24,7 @@ func TestRegister(t *testing.T) {
 			expErr: nil,
 		},
 	}
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
-	testRepo := repository.NewTestRepo(users, accounts)
+	testRepo := repository.NewTestRepo()
 	system := NewPaymentSystem(&testRepo)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -40,9 +37,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestRegisterFailed(t *testing.T) {
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
-	testRepo := repository.NewTestRepo(users, accounts)
+	testRepo := repository.NewTestRepo()
 	system := NewPaymentSystem(&testRepo)
 	user1 := models.User{
 		FisrtName: "Bob",
@@ -92,9 +87,7 @@ func TestLogin(t *testing.T) {
 			expErr:   ErrUnauthenticated,
 		},
 	}
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
-	testRepo := repository.NewTestRepo(users, accounts)
+	testRepo := repository.NewTestRepo()
 	system := NewPaymentSystem(&testRepo)
 	system.Register(&models.User{
 		FisrtName: "Bob",
@@ -113,9 +106,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestTokenSuccess(t *testing.T) {
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
-	testRepo := repository.NewTestRepo(users, accounts)
+	testRepo := repository.NewTestRepo()
 	system := NewPaymentSystem(&testRepo)
 	bob := &models.User{
 		FisrtName: "Bob",
@@ -136,9 +127,7 @@ func TestTokenSuccess(t *testing.T) {
 }
 
 func TestTokenWrongToken(t *testing.T) {
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
-	testRepo := repository.NewTestRepo(users, accounts)
+	testRepo := repository.NewTestRepo()
 	system := NewPaymentSystem(&testRepo)
 	bob := &models.User{
 		FisrtName: "Bob",
@@ -159,9 +148,7 @@ func TestTokenWrongToken(t *testing.T) {
 }
 
 func TestTokenWrongUser(t *testing.T) {
-	users := make(map[uuid.UUID]models.User)
-	accounts := make(map[uuid.UUID]models.Account)
-	testRepo := repository.NewTestRepo(users, accounts)
+	testRepo := repository.NewTestRepo()
 	system := NewPaymentSystem(&testRepo)
 	bob := &models.User{
 		FisrtName: "Bob",
@@ -192,4 +179,80 @@ func TestTokenWrongUser(t *testing.T) {
 	if err := system.CheckToken(bob.UUID, tokenAlice); !assert.IsEqual(err, ErrUnauthenticated) {
 		t.Errorf("token error: %v", err)
 	}
+}
+
+func TestCreateNewAccountSucces(t *testing.T) {
+	testRepo := repository.NewTestRepo()
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	if _, err := system.NewAccount(bob.UUID); err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+}
+
+func TestCreateNewAccountUnknownUser(t *testing.T) {
+	testRepo := repository.NewTestRepo()
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	account, err := system.NewAccount(bob.UUID)
+	if !assert.IsEqual(err, repository.ErrorUnknownUser) {
+		t.Errorf("create new account error: %v", err)
+	}
+	if account.UserId != bob.ID {
+		t.Errorf("different userID : %v, exp: %v", account.UserId, bob.ID)
+	}
+
+}
+
+func TestGetAccounts(t *testing.T) {
+	testRepo := repository.NewTestRepo()
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	if _, err := system.NewAccount(bob.UUID); err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	accs, err := system.GetAccounts(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	if len(accs) != 1 {
+		t.Errorf("diff amount of accounts: %v exp: %v", len(accs), 1)
+	}
+
+	if accs[0].UserId != bob.ID {
+		t.Errorf("different userID : %v, exp: %v", accs[0].UserId, bob.ID)
+	}
+	if accs[0].Balance != 0 {
+		t.Errorf("balance has to be 0")
+	}
+
 }
