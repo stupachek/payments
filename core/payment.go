@@ -118,5 +118,5 @@ func (p *PaymentSystem) NewAccount(userUUID uuid.UUID, account *models.Account) 
 }
 
 func (p *PaymentSystem) GetAccounts(userUUID uuid.UUID) ([]models.Account, error) {
-	return p.UserRepo.GetAccounts(userUUID)
+	return p.UserRepo.GetAccountsForUserWith(userUUID)
 }

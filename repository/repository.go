@@ -16,7 +16,7 @@ type UserRepository interface {
 	GetUserByEmail(email string) (*models.User, error)
 	GetUserByUUID(uuid uuid.UUID) (*models.User, error)
 	CreateAccount(account *models.Account) error
-	GetAccounts(uuid uuid.UUID) ([]models.Account, error)
+	GetAccountsForUserWith(uuid uuid.UUID) ([]models.Account, error)
 }
 
 type PostgresRepo struct {
@@ -83,7 +83,7 @@ func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 	return &user, nil
 }
 
-func (p *PostgresRepo) GetAccounts(uuid uuid.UUID) ([]models.Account, error) {
+func (p *PostgresRepo) GetAccountsForUserWith(uuid uuid.UUID) ([]models.Account, error) {
 	user, err := p.GetUserByUUID(uuid)
 	if err != nil {
 		return []models.Account{}, err
@@ -91,7 +91,7 @@ func (p *PostgresRepo) GetAccounts(uuid uuid.UUID) ([]models.Account, error) {
 	return user.Accounts, nil
 }
 
-func (t *TestRepo) GetAccounts(uuid uuid.UUID) ([]models.Account, error) {
+func (t *TestRepo) GetAccountsForUserWith(uuid uuid.UUID) ([]models.Account, error) {
 	user, err := t.GetUserByUUID(uuid)
 	if err != nil {
 		return user.Accounts, err
