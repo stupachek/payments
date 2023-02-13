@@ -193,3 +193,80 @@ func TestTokenWrongUser(t *testing.T) {
 		t.Errorf("token error: %v", err)
 	}
 }
+
+func TestCreateNewAccountSucces(t *testing.T) {
+	users := make(map[uuid.UUID]models.User)
+	accounts := make(map[uuid.UUID]models.Account)
+	testRepo := repository.NewTestRepo(users, accounts)
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	account := models.Account{}
+	if err := system.NewAccount(bob.UUID, &account); err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+}
+
+func TestCreateNewAccountUnknownUser(t *testing.T) {
+	users := make(map[uuid.UUID]models.User)
+	accounts := make(map[uuid.UUID]models.Account)
+	testRepo := repository.NewTestRepo(users, accounts)
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	account := models.Account{}
+	if err := system.NewAccount(bob.UUID, &account); !assert.IsEqual(err, repository.ErrorUnknownUser) {
+		t.Errorf("create new account error: %v", err)
+	}
+}
+
+func TestGetAccounts(t *testing.T) {
+	users := make(map[uuid.UUID]models.User)
+	accounts := make(map[uuid.UUID]models.Account)
+	testRepo := repository.NewTestRepo(users, accounts)
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	account := models.Account{}
+	if err := system.NewAccount(bob.UUID, &account); err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	accs, err := system.GetAccounts(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	if len(accs) == 0 {
+		t.Errorf("empty accounts")
+	}
+	for _, acc := range accs {
+		if acc.UserId != bob.ID {
+			t.Errorf("different userID : %v, exp: %v", acc.UserId, bob.ID)
+		}
+	}
+}

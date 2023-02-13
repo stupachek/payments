@@ -9,11 +9,12 @@ import (
 )
 
 var ErrorCreated = errors.New("user has already created")
+var ErrorUnknownUser = errors.New("user does not exist")
 
 type UserRepository interface {
 	CreateUser(user *models.User) error
-	GetUserByEmail(email string) (models.User, error)
-	GetUserByUUID(uuid uuid.UUID) (models.User, error)
+	GetUserByEmail(email string) (*models.User, error)
+	GetUserByUUID(uuid uuid.UUID) (*models.User, error)
 	CreateAccount(account *models.Account) error
 	GetAccounts(uuid uuid.UUID) ([]models.Account, error)
 }
@@ -64,11 +65,11 @@ func NewTestRepo(users map[uuid.UUID]models.User, accounts map[uuid.UUID]models.
 	}
 }
 
-func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
+func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 	userGorm := GormUser{}
 	err := p.DB.Model(GormUser{}).Where("UUID = ?", uuid).Preload("Accounts").Take(&userGorm).Error
 	if err != nil {
-		return models.User{}, err
+		return &models.User{}, err
 	}
 	user := models.User{
 		ID:        userGorm.ID,
@@ -79,7 +80,7 @@ func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
 		Password:  userGorm.Password,
 		Accounts:  fromGormToModelAccount(userGorm.Accounts),
 	}
-	return user, nil
+	return &user, nil
 }
 
 func (p *PostgresRepo) GetAccounts(uuid uuid.UUID) ([]models.Account, error) {
@@ -93,24 +94,24 @@ func (p *PostgresRepo) GetAccounts(uuid uuid.UUID) ([]models.Account, error) {
 func (t *TestRepo) GetAccounts(uuid uuid.UUID) ([]models.Account, error) {
 	user, err := t.GetUserByUUID(uuid)
 	if err != nil {
-		return []models.Account{}, err
+		return user.Accounts, err
 	}
 	return user.Accounts, nil
 }
 
-func (p *TestRepo) GetUserByUUID(uuid uuid.UUID) (models.User, error) {
+func (p *TestRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 	user, ok := p.Users[uuid]
 	if !ok {
-		return models.User{}, errors.New("user does not exist")
+		return &models.User{}, ErrorUnknownUser
 	}
-	return user, nil
+	return &user, nil
 }
 
-func (p *PostgresRepo) GetUserByEmail(email string) (models.User, error) {
+func (p *PostgresRepo) GetUserByEmail(email string) (*models.User, error) {
 	userGorm := GormUser{}
 	err := p.DB.Model(GormUser{}).Where("email = ?", email).Preload("Accounts").Take(&userGorm).Error
 	if err != nil {
-		return models.User{}, err
+		return &models.User{}, err
 	}
 	user := models.User{
 		ID:        userGorm.ID,
@@ -121,16 +122,16 @@ func (p *PostgresRepo) GetUserByEmail(email string) (models.User, error) {
 		Password:  userGorm.Password,
 		Accounts:  fromGormToModelAccount(userGorm.Accounts),
 	}
-	return user, nil
+	return &user, nil
 }
 
-func (t *TestRepo) GetUserByEmail(email string) (models.User, error) {
+func (t *TestRepo) GetUserByEmail(email string) (*models.User, error) {
 	for _, user := range t.Users {
 		if user.Email == email {
-			return user, nil
+			return &user, nil
 		}
 	}
-	return models.User{}, errors.New("user does not exist")
+	return &models.User{}, ErrorUnknownUser
 }
 
 func (t *TestRepo) CreateAccount(account *models.Account) error {
