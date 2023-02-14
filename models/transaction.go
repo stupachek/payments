@@ -5,7 +5,6 @@ import (
 )
 
 type Transaction struct {
-	ID              uint      `json:"-"`
 	UUID            uuid.UUID `json:"uuid"`
 	Status          string    `json:"status"`
 	SourceUUID      uuid.UUID `json:"source_uuid"`
