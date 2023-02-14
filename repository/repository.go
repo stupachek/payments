@@ -141,7 +141,7 @@ func NewTestRepo() TestRepo {
 
 func (p *PostgresRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {
 	gormAccount := GormAccount{}
-	err := p.DB.Model(GormAccount{}).Where("UUID = ?", uuid).Preload("Transactions").Take(&gormAccount)
+	err := p.DB.Model(GormAccount{}).Where("UUID = ?", uuid).Preload("Sources").Preload("Destinations").Take(&gormAccount)
 	if err != nil {
 		return &models.Account{}, nil
 	}
@@ -159,7 +159,7 @@ func (p *PostgresRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
 
 func (p *PostgresRepo) GetAccountByID(ID uint) (*models.Account, error) {
 	gormAccount := GormAccount{}
-	err := p.DB.Model(GormAccount{}).Where("ID = ?", ID).Preload("Transactions").Take(&gormAccount)
+	err := p.DB.Model(GormAccount{}).Where("ID = ?", ID).Preload("Sources").Preload("Destinations").Take(&gormAccount)
 	if err != nil {
 		return &models.Account{}, nil
 	}

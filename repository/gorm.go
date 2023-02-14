@@ -35,9 +35,9 @@ type GormTransaction struct {
 	gorm.Model
 	UUID          uuid.UUID `json:"uuid" gorm:"type:uuid"`
 	Status        string    `json:"status" gorm:"size:50;not null"`
-	SourceId      uint
-	DestinationId uint
-	Amount        uint
+	SourceId      uint      `gorm:"not null"`
+	DestinationId uint      `gorm:"not null"`
+	Amount        uint      `gorm:"not null"`
 }
 
 func ConnectDataBase() *gorm.DB {
