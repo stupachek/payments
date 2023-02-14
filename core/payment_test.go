@@ -301,10 +301,16 @@ func TestCreateTransaction(t *testing.T) {
 	if err != nil {
 		t.Errorf("create new account error: %v", err)
 	}
-	if len(accs[0].Sources) != 1 {
-		t.Errorf("source error")
+	for _, acc := range accs {
+		if acc.UUID == tr.SourceUUID {
+			if len(acc.Sources) != 1 {
+				t.Error("diff sources")
+			}
+		} else {
+			if len(acc.Destinations) != 1 {
+				t.Error("diff destinations")
+			}
+		}
 	}
-	if len(accs[1].Destinations) != 1 {
-		t.Errorf("destination error")
-	}
+
 }
