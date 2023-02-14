@@ -162,7 +162,7 @@ func (p *PaymentSystem) NewTransaction(tr Transaction) (models.Transaction, erro
 func checkAccountExists(accounts []models.Account, accountUUID uuid.UUID) (models.Account, error) {
 	for _, acc := range accounts {
 		if acc.UUID == accountUUID {
-			return acc, ErrUnknownAccount
+			return acc, nil
 		}
 	}
 	return models.Account{}, ErrUnknownAccount
