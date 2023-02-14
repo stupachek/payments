@@ -18,8 +18,6 @@ type UserRepository interface {
 	GetUserByUUID(uuid uuid.UUID) (*models.User, error)
 	CreateAccount(account *models.Account) error
 	GetAccountsForUserWith(uuid uuid.UUID) ([]models.Account, error)
-	GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
-	GetAccountByID(ID uint) (*models.Account, error)
 	CreateTransaction(transaction models.Transaction) error
 }
 
@@ -35,7 +33,7 @@ type TestRepo struct {
 }
 
 func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {
-	sourse, err := p.GetAccountByUUID(transaction.SourceUUID)
+	source, err := p.GetAccountByUUID(transaction.SourceUUID)
 	if err != nil {
 		return err
 	}
@@ -44,11 +42,11 @@ func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {
 		return err
 	}
 	gormTransaction := GormTransaction{
-		UUID:          transaction.UUID,
-		Status:        transaction.Status,
-		SourceId:      sourse.ID,
-		DestinationId: destination.ID,
-		Amount:        transaction.Amount,
+		UUID:            transaction.UUID,
+		Status:          transaction.Status,
+		SourceUUID:      source.UUID,
+		DestinationUUID: destination.UUID,
+		Amount:          transaction.Amount,
 	}
 	err = p.DB.Create(&gormTransaction).Error
 	if err != nil {
@@ -81,11 +79,10 @@ func (p *PostgresRepo) fromGormToModelAccount(accounts []GormAccount) []models.A
 	modelAccounts := make([]models.Account, len(accounts))
 	for i, acc := range accounts {
 		modelAccounts[i] = models.Account{
-			ID:           acc.ID,
 			UUID:         acc.UUID,
 			IBAN:         acc.IBAN,
 			Balance:      acc.Balance,
-			UserId:       acc.UserId,
+			UserUUID:     acc.UserUUID,
 			Sources:      p.fromGormToModelTransaction(acc.Sources),
 			Destinations: p.fromGormToModelTransaction(acc.Destinations),
 		}
@@ -97,11 +94,11 @@ func (p *PostgresRepo) fromGormToModelAccount(accounts []GormAccount) []models.A
 func (p *PostgresRepo) fromGormToModelTransaction(transactions []GormTransaction) []models.Transaction {
 	modelTransaction := make([]models.Transaction, len(transactions))
 	for i, tr := range transactions {
-		source, err := p.GetAccountByID(tr.SourceId)
+		source, err := p.GetAccountByUUID(tr.SourceUUID)
 		if err != nil {
 			return nil
 		}
-		destination, err := p.GetAccountByID(tr.DestinationId)
+		destination, err := p.GetAccountByUUID(tr.DestinationUUID)
 		if err != nil {
 			return nil
 		}
@@ -119,10 +116,10 @@ func (p *PostgresRepo) fromGormToModelTransaction(transactions []GormTransaction
 
 func (p *PostgresRepo) CreateAccount(account *models.Account) error {
 	gormAcc := GormAccount{
-		UUID:    account.UUID,
-		IBAN:    account.IBAN,
-		Balance: account.Balance,
-		UserId:  account.UserId,
+		UUID:     account.UUID,
+		IBAN:     account.IBAN,
+		Balance:  account.Balance,
+		UserUUID: account.UserUUID,
 	}
 	err := p.DB.Create(&gormAcc).Error
 	if err != nil {
@@ -146,11 +143,10 @@ func (p *PostgresRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
 		return &models.Account{}, nil
 	}
 	account := models.Account{
-		ID:           gormAccount.ID,
 		UUID:         gormAccount.UUID,
 		IBAN:         gormAccount.IBAN,
 		Balance:      gormAccount.Balance,
-		UserId:       gormAccount.UserId,
+		UserUUID:     gormAccount.UserUUID,
 		Sources:      p.fromGormToModelTransaction(gormAccount.Sources),
 		Destinations: p.fromGormToModelTransaction(gormAccount.Destinations),
 	}
@@ -164,11 +160,10 @@ func (p *PostgresRepo) GetAccountByID(ID uint) (*models.Account, error) {
 		return &models.Account{}, nil
 	}
 	account := models.Account{
-		ID:           gormAccount.ID,
 		UUID:         gormAccount.UUID,
 		IBAN:         gormAccount.IBAN,
 		Balance:      gormAccount.Balance,
-		UserId:       gormAccount.UserId,
+		UserUUID:     gormAccount.UserUUID,
 		Sources:      p.fromGormToModelTransaction(gormAccount.Sources),
 		Destinations: p.fromGormToModelTransaction(gormAccount.Destinations),
 	}
@@ -225,15 +220,6 @@ func (p *TestRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {
 	return account, nil
 }
 
-func (p *TestRepo) GetAccountByID(ID uint) (*models.Account, error) {
-	for _, acc := range p.Accounts {
-		if acc.ID == ID {
-			return acc, nil
-		}
-	}
-	return &models.Account{}, ErrorUnknownAccount
-}
-
 func (p *PostgresRepo) GetUserByEmail(email string) (*models.User, error) {
 	userGorm := GormUser{}
 	err := p.DB.Model(GormUser{}).Where("email = ?", email).Preload("Accounts").Take(&userGorm).Error
@@ -262,24 +248,17 @@ func (t *TestRepo) GetUserByEmail(email string) (*models.User, error) {
 }
 
 func (t *TestRepo) CreateAccount(account *models.Account) error {
-	account.ID = t.nextId()
 	_, ok := t.Accounts[account.UUID]
 	if !ok {
 		t.Accounts[account.UUID] = account
-		user := t.getUserById(account.UserId)
+		user, err := t.GetUserByUUID(account.UserUUID)
+		if err != nil {
+			return err
+		}
 		user.Accounts = append(user.Accounts, *account)
 		return nil
 	}
 	return ErrorCreated
-}
-
-func (t *TestRepo) getUserById(ID uint) *models.User {
-	for _, user := range t.Users {
-		if user.ID == ID {
-			return user
-		}
-	}
-	return &models.User{}
 }
 
 func (t *TestRepo) CreateUser(user *models.User) error {

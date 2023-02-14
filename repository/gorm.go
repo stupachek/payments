@@ -13,7 +13,7 @@ import (
 
 type GormUser struct {
 	gorm.Model
-	UUID      uuid.UUID     `json:"uuid" gorm:"type:uuid"`
+	UUID      uuid.UUID     `json:"uuid" gorm:"primary_key;type:uuid"`
 	FisrtName string        `json:"firstName" gorm:"size:50;not null"`
 	LastName  string        `json:"lastName" gorm:"size:50;not null"`
 	Email     string        `json:"email" gorm:"size:255;not null;unique"`
@@ -23,21 +23,21 @@ type GormUser struct {
 
 type GormAccount struct {
 	gorm.Model
-	UUID         uuid.UUID `json:"uuid" gorm:"type:uuid"`
+	UUID         uuid.UUID `json:"uuid" gorm:"primary_key;type:uuid"`
 	IBAN         string    `json:"iban" gorm:"size:250;not null;unique"`
 	Balance      uint      `json:"balance" gorm:"not null"`
-	UserId       uint
+	UserUUID     uuid.UUID
 	Sources      []GormTransaction `gorm:"foreignKey:SourceId"`
 	Destinations []GormTransaction `gorm:"foreignKey:DestinationId"`
 }
 
 type GormTransaction struct {
 	gorm.Model
-	UUID          uuid.UUID `json:"uuid" gorm:"type:uuid"`
-	Status        string    `json:"status" gorm:"size:50;not null"`
-	SourceId      uint      `gorm:"not null"`
-	DestinationId uint      `gorm:"not null"`
-	Amount        uint      `gorm:"not null"`
+	UUID            uuid.UUID `json:"uuid" gorm:"primary_key;type:uuid"`
+	Status          string    `json:"status" gorm:"size:50;not null"`
+	SourceUUID      uuid.UUID `gorm:"not null"`
+	DestinationUUID uuid.UUID `gorm:"not null"`
+	Amount          uint      `gorm:"not null"`
 }
 
 func ConnectDataBase() *gorm.DB {

@@ -111,7 +111,7 @@ func (p *PaymentSystem) NewAccount(userUUID uuid.UUID) (models.Account, error) {
 		return models.Account{}, err
 	}
 	account := models.Account{}
-	account.UserId = user.ID
+	account.UserUUID = user.UUID
 	account.IBAN, err = randToken(29)
 	if err != nil {
 		return models.Account{}, err

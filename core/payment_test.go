@@ -215,8 +215,8 @@ func TestCreateNewAccountUnknownUser(t *testing.T) {
 	if !assert.IsEqual(err, repository.ErrorUnknownUser) {
 		t.Errorf("create new account error: %v", err)
 	}
-	if account.UserId != bob.ID {
-		t.Errorf("different userID : %v, exp: %v", account.UserId, bob.ID)
+	if account.UserUUID != bob.UUID {
+		t.Errorf("different userID : %v, exp: %v", account.UserUUID, bob.UUID)
 	}
 
 }
@@ -248,8 +248,8 @@ func TestGetAccounts(t *testing.T) {
 		t.Errorf("diff amount of accounts: %v exp: %v", len(accs), 1)
 	}
 
-	if accs[0].UserId != bob.ID {
-		t.Errorf("different userID : %v, exp: %v", accs[0].UserId, bob.ID)
+	if accs[0].UserUUID != bob.UUID {
+		t.Errorf("different userUUID : %v, exp: %v", accs[0].UserUUID, bob.UUID)
 	}
 	if accs[0].Balance != 0 {
 		t.Errorf("balance has to be 0")
