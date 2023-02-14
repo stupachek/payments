@@ -26,7 +26,6 @@ type PostgresRepo struct {
 }
 
 type TestRepo struct {
-	idCounter   uint
 	Users       map[uuid.UUID]*models.User
 	Accounts    map[uuid.UUID]*models.Account
 	Transaction map[uuid.UUID]*models.Transaction
@@ -56,7 +55,6 @@ func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {
 }
 
 func (t *TestRepo) CreateTransaction(transaction models.Transaction) error {
-	transaction.ID = t.nextId()
 	_, ok := t.Transaction[transaction.UUID]
 	if !ok {
 		t.Transaction[transaction.UUID] = &transaction
@@ -139,23 +137,6 @@ func NewTestRepo() TestRepo {
 func (p *PostgresRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {
 	gormAccount := GormAccount{}
 	err := p.DB.Model(GormAccount{}).Where("UUID = ?", uuid).Preload("Sources").Preload("Destinations").Take(&gormAccount)
-	if err != nil {
-		return &models.Account{}, nil
-	}
-	account := models.Account{
-		UUID:         gormAccount.UUID,
-		IBAN:         gormAccount.IBAN,
-		Balance:      gormAccount.Balance,
-		UserUUID:     gormAccount.UserUUID,
-		Sources:      p.fromGormToModelTransaction(gormAccount.Sources),
-		Destinations: p.fromGormToModelTransaction(gormAccount.Destinations),
-	}
-	return &account, nil
-}
-
-func (p *PostgresRepo) GetAccountByID(ID uint) (*models.Account, error) {
-	gormAccount := GormAccount{}
-	err := p.DB.Model(GormAccount{}).Where("ID = ?", ID).Preload("Sources").Preload("Destinations").Take(&gormAccount)
 	if err != nil {
 		return &models.Account{}, nil
 	}
@@ -262,7 +243,6 @@ func (t *TestRepo) CreateAccount(account *models.Account) error {
 }
 
 func (t *TestRepo) CreateUser(user *models.User) error {
-	user.ID = t.nextId()
 	_, ok := t.Users[user.UUID]
 	if !ok {
 		err := t.CheckIfExistUser(user)
@@ -273,11 +253,6 @@ func (t *TestRepo) CreateUser(user *models.User) error {
 		return nil
 	}
 	return ErrorCreated
-}
-
-func (t *TestRepo) nextId() uint {
-	t.idCounter++
-	return t.idCounter
 }
 
 func (t *TestRepo) CheckIfExistUser(user *models.User) error {
