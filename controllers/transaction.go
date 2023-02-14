@@ -3,14 +3,15 @@ package controllers
 import (
 	"net/http"
 	"pay/core"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type TransactionInput struct {
-	destinationUUID uuid.UUID `json:"destination_uuid" binding:"required"`
-	amount          uint      `json:"amount" binding:"required"`
+	DestinationUUID string `json:"destination_uuid" binding:"required"`
+	Amount          string `json:"amount" binding:"required"`
 }
 
 func (c *Controller) NewTransaction(ctx *gin.Context) {
@@ -31,11 +32,25 @@ func (c *Controller) NewTransaction(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	destinationUUID, err := uuid.Parse(input.DestinationUUID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	amount, err := strconv.ParseUint(input.Amount, 10, 32)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	tr := core.Transaction{
 		UserUUID:        userUUID,
 		SourseUUID:      accountUUID,
-		DestinationUUID: input.destinationUUID,
-		Amount:          input.amount,
+		DestinationUUID: destinationUUID,
+		Amount:          uint(amount),
 	}
 	transaction, err := c.System.NewTransaction(tr)
 	if err != nil {

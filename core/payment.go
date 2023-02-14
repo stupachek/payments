@@ -139,9 +139,6 @@ func (p *PaymentSystem) NewTransaction(tr Transaction) (models.Transaction, erro
 	if err := p.checkAmount(source, tr.Amount); err != nil {
 		return models.Transaction{}, err
 	}
-	if err != nil {
-		return models.Transaction{}, err
-	}
 	transaction := models.Transaction{
 		Status:          "prepared",
 		SourceUUID:      tr.SourseUUID,
