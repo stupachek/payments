@@ -67,6 +67,9 @@ func (t *TestRepo) CreateTransaction(transaction models.Transaction) error {
 			return err
 		}
 		destination, err := t.GetAccountByUUID(transaction.DestinationUUID)
+		if err != nil {
+			return err
+		}
 		t.Accounts[sourse.UUID].Sources = append(t.Accounts[sourse.UUID].Sources, transaction)
 		t.Accounts[destination.UUID].Destinations = append(t.Accounts[destination.UUID].Destinations, transaction)
 		return nil
