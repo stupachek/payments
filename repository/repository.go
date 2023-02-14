@@ -19,6 +19,7 @@ type UserRepository interface {
 	CreateAccount(account *models.Account) error
 	GetAccountsForUserWith(uuid uuid.UUID) ([]models.Account, error)
 	GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
+	GetAccountByID(ID uint) (*models.Account, error)
 	CreateTransaction(transaction models.Transaction) error
 }
 
@@ -34,35 +35,46 @@ type TestRepo struct {
 }
 
 func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {
+	sourse, err := p.GetAccountByUUID(transaction.SourceUUID)
+	if err != nil {
+		return err
+	}
+	destination, err := p.GetAccountByUUID(transaction.DestinationUUID)
+	if err != nil {
+		return err
+	}
 	gormTransaction := GormTransaction{
 		UUID:          transaction.UUID,
 		Status:        transaction.Status,
-		SourceId:      transaction.SourceId,
-		DestinationId: transaction.DestinationId,
+		SourceId:      sourse.ID,
+		DestinationId: destination.ID,
 		Amount:        transaction.Amount,
 	}
-	err := p.DB.Create(&gormTransaction).Error
+	err = p.DB.Create(&gormTransaction).Error
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *TestRepo) CreateTransaction(transaction models.Transaction) error {
-	transaction.ID = p.nextId()
-	_, ok := p.Transaction[transaction.UUID]
+func (t *TestRepo) CreateTransaction(transaction models.Transaction) error {
+	transaction.ID = t.nextId()
+	_, ok := t.Transaction[transaction.UUID]
 	if !ok {
-		p.Transaction[transaction.UUID] = &transaction
-		sourse := p.getUserById(transaction.SourceId)
-		destination := p.getUserById(transaction.DestinationId)
-		p.Accounts[sourse.UUID].Sources = append(p.Accounts[sourse.UUID].Sources, transaction)
-		p.Accounts[destination.UUID].Destinations = append(p.Accounts[destination.UUID].Destinations, transaction)
+		t.Transaction[transaction.UUID] = &transaction
+		sourse, err := t.GetAccountByUUID(transaction.SourceUUID)
+		if err != nil {
+			return err
+		}
+		destination, err := t.GetAccountByUUID(transaction.DestinationUUID)
+		t.Accounts[sourse.UUID].Sources = append(t.Accounts[sourse.UUID].Sources, transaction)
+		t.Accounts[destination.UUID].Destinations = append(t.Accounts[destination.UUID].Destinations, transaction)
 		return nil
 	}
 	return ErrorCreated
 }
 
-func fromGormToModelAccount(accounts []GormAccount) []models.Account {
+func (p *PostgresRepo) fromGormToModelAccount(accounts []GormAccount) []models.Account {
 	modelAccounts := make([]models.Account, len(accounts))
 	for i, acc := range accounts {
 		modelAccounts[i] = models.Account{
@@ -71,24 +83,32 @@ func fromGormToModelAccount(accounts []GormAccount) []models.Account {
 			IBAN:         acc.IBAN,
 			Balance:      acc.Balance,
 			UserId:       acc.UserId,
-			Sources:      fromGormToModelTransaction(acc.Sources),
-			Destinations: fromGormToModelTransaction(acc.Destinations),
+			Sources:      p.fromGormToModelTransaction(acc.Sources),
+			Destinations: p.fromGormToModelTransaction(acc.Destinations),
 		}
 	}
 
 	return modelAccounts
 }
 
-func fromGormToModelTransaction(transactions []GormTransaction) []models.Transaction {
+func (p *PostgresRepo) fromGormToModelTransaction(transactions []GormTransaction) []models.Transaction {
 	modelTransaction := make([]models.Transaction, len(transactions))
 	for i, tr := range transactions {
+		source, err := p.GetAccountByID(tr.SourceId)
+		if err != nil {
+			return nil
+		}
+		destination, err := p.GetAccountByID(tr.DestinationId)
+		if err != nil {
+			return nil
+		}
 		modelTransaction[i] = models.Transaction{
-			ID:            tr.ID,
-			UUID:          tr.UUID,
-			Status:        tr.Status,
-			SourceId:      tr.SourceId,
-			DestinationId: tr.DestinationId,
-			Amount:        tr.Amount,
+			ID:              tr.ID,
+			UUID:            tr.UUID,
+			Status:          tr.Status,
+			SourceUUID:      source.UUID,
+			DestinationUUID: destination.UUID,
+			Amount:          tr.Amount,
 		}
 	}
 	return modelTransaction
@@ -128,8 +148,26 @@ func (p *PostgresRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
 		IBAN:         gormAccount.IBAN,
 		Balance:      gormAccount.Balance,
 		UserId:       gormAccount.UserId,
-		Sources:      fromGormToModelTransaction(gormAccount.Sources),
-		Destinations: fromGormToModelTransaction(gormAccount.Destinations),
+		Sources:      p.fromGormToModelTransaction(gormAccount.Sources),
+		Destinations: p.fromGormToModelTransaction(gormAccount.Destinations),
+	}
+	return &account, nil
+}
+
+func (p *PostgresRepo) GetAccountByID(ID uint) (*models.Account, error) {
+	gormAccount := GormAccount{}
+	err := p.DB.Model(GormAccount{}).Where("ID = ?", ID).Preload("Transactions").Take(&gormAccount)
+	if err != nil {
+		return &models.Account{}, nil
+	}
+	account := models.Account{
+		ID:           gormAccount.ID,
+		UUID:         gormAccount.UUID,
+		IBAN:         gormAccount.IBAN,
+		Balance:      gormAccount.Balance,
+		UserId:       gormAccount.UserId,
+		Sources:      p.fromGormToModelTransaction(gormAccount.Sources),
+		Destinations: p.fromGormToModelTransaction(gormAccount.Destinations),
 	}
 	return &account, nil
 }
@@ -147,7 +185,7 @@ func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 		LastName:  userGorm.LastName,
 		Email:     userGorm.Email,
 		Password:  userGorm.Password,
-		Accounts:  fromGormToModelAccount(userGorm.Accounts),
+		Accounts:  p.fromGormToModelAccount(userGorm.Accounts),
 	}
 	return &user, nil
 }
@@ -184,6 +222,15 @@ func (p *TestRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {
 	return account, nil
 }
 
+func (p *TestRepo) GetAccountByID(ID uint) (*models.Account, error) {
+	for _, acc := range p.Accounts {
+		if acc.ID == ID {
+			return acc, nil
+		}
+	}
+	return &models.Account{}, ErrorUnknownAccount
+}
+
 func (p *PostgresRepo) GetUserByEmail(email string) (*models.User, error) {
 	userGorm := GormUser{}
 	err := p.DB.Model(GormUser{}).Where("email = ?", email).Preload("Accounts").Take(&userGorm).Error
@@ -197,7 +244,7 @@ func (p *PostgresRepo) GetUserByEmail(email string) (*models.User, error) {
 		LastName:  userGorm.LastName,
 		Email:     userGorm.Email,
 		Password:  userGorm.Password,
-		Accounts:  fromGormToModelAccount(userGorm.Accounts),
+		Accounts:  p.fromGormToModelAccount(userGorm.Accounts),
 	}
 	return &user, nil
 }
