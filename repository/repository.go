@@ -58,7 +58,7 @@ func (t *TestRepo) CreateTransaction(transaction models.Transaction) error {
 	_, ok := t.Transaction[transaction.UUID]
 	if !ok {
 		t.Transaction[transaction.UUID] = &transaction
-		Source, err := t.GetAccountByUUID(transaction.SourceUUID)
+		source, err := t.GetAccountByUUID(transaction.SourceUUID)
 		if err != nil {
 			return err
 		}
@@ -66,8 +66,10 @@ func (t *TestRepo) CreateTransaction(transaction models.Transaction) error {
 		if err != nil {
 			return err
 		}
-		t.Accounts[Source.UUID].Sources = append(t.Accounts[Source.UUID].Sources, transaction)
-		t.Accounts[destination.UUID].Destinations = append(t.Accounts[destination.UUID].Destinations, transaction)
+		source.Sources = append(source.Sources, transaction)
+		destination.Destinations = append(destination.Destinations, transaction)
+		// t.Accounts[Source.UUID].Sources = append(t.Accounts[Source.UUID].Sources, transaction)
+		// t.Accounts[destination.UUID].Destinations = append(t.Accounts[destination.UUID].Destinations, transaction)
 		return nil
 	}
 	return ErrorCreated
@@ -138,9 +140,11 @@ func (p *PostgresRepo) CreateAccount(account *models.Account) error {
 func NewTestRepo() TestRepo {
 	users := make(map[uuid.UUID]*models.User)
 	accounts := make(map[uuid.UUID]*models.Account)
+	transaction := make(map[uuid.UUID]*models.Transaction)
 	return TestRepo{
-		Users:    users,
-		Accounts: accounts,
+		Users:       users,
+		Accounts:    accounts,
+		Transaction: transaction,
 	}
 }
 
@@ -179,11 +183,13 @@ func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 }
 
 func (t *TestRepo) GetAccounts(userUUID uuid.UUID) ([]models.Account, error) {
-	user, err := t.GetUserByUUID(userUUID)
-	if err != nil {
-		return user.Accounts, err
+	accounts := make([]models.Account, 0)
+	for _, account := range t.Accounts {
+		if account.UserUUID == userUUID {
+			accounts = append(accounts, *account)
+		}
 	}
-	return user.Accounts, nil
+	return accounts, nil
 }
 
 func (p *TestRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {

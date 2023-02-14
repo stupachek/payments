@@ -256,3 +256,55 @@ func TestGetAccounts(t *testing.T) {
 	}
 
 }
+
+func TestCreateTransaction(t *testing.T) {
+	testRepo := repository.NewTestRepo()
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	source, err := system.NewAccount(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	destination, err := system.NewAccount(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	tr := Transaction{
+		UserUUID:        bob.UUID,
+		SourceUUID:      source.UUID,
+		DestinationUUID: destination.UUID,
+		Amount:          0,
+	}
+	transaction, err := system.NewTransaction(tr)
+	if err != nil {
+		t.Errorf("create new transaction error: %v", err)
+	}
+	if transaction.SourceUUID != source.UUID {
+		t.Errorf("diff source uuid")
+	}
+	if transaction.DestinationUUID != destination.UUID {
+		t.Errorf("diff destination uuid")
+	}
+	accs, err := system.GetAccounts(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	if len(accs[0].Sources) != 1 {
+		t.Errorf("source error")
+	}
+	if len(accs[1].Destinations) != 1 {
+		t.Errorf("destination error")
+	}
+}
