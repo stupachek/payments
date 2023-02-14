@@ -8,9 +8,9 @@ import (
 	"github.com/google/uuid"
 )
 
-type transactionInput struct {
-	destinationUUID uuid.UUID
-	amount          uint
+type TransactionInput struct {
+	destinationUUID uuid.UUID `json:"destination_uuid" binding:"required"`
+	amount          uint      `json:"amount" binding:"required"`
 }
 
 func (c *Controller) NewTransaction(ctx *gin.Context) {
@@ -26,7 +26,7 @@ func (c *Controller) NewTransaction(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	var input transactionInput
+	var input TransactionInput
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
