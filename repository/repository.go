@@ -17,8 +17,8 @@ type UserRepository interface {
 	GetUserByEmail(email string) (*models.User, error)
 	GetUserByUUID(uuid uuid.UUID) (*models.User, error)
 	CreateAccount(account *models.Account) error
-	GetAccountsForUserWith(uuid uuid.UUID) ([]models.Account, error)
 	CreateTransaction(transaction models.Transaction) error
+	GetAccounts(userUUID uuid.UUID) ([]models.Account, error)
 }
 
 type PostgresRepo struct {
@@ -112,6 +112,17 @@ func (p *PostgresRepo) fromGormToModelTransaction(transactions []GormTransaction
 	return modelTransaction
 }
 
+func (p *PostgresRepo) GetAccounts(userUUID uuid.UUID) ([]models.Account, error) {
+	var gormAccounts []GormAccount
+	result := p.DB.Model(GormAccount{}).Find(&gormAccounts).Where("UserUUID = ?", userUUID).Preload("Sources").Preload("Destinations")
+	if result.Error != nil {
+		return []models.Account{}, result.Error
+	}
+	modelAccounts := p.fromGormToModelAccount(gormAccounts)
+	return modelAccounts, nil
+
+}
+
 func (p *PostgresRepo) CreateAccount(account *models.Account) error {
 	gormAcc := GormAccount{
 		UUID:     account.UUID,
@@ -169,16 +180,8 @@ func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 	return &user, nil
 }
 
-func (p *PostgresRepo) GetAccountsForUserWith(uuid uuid.UUID) ([]models.Account, error) {
-	user, err := p.GetUserByUUID(uuid)
-	if err != nil {
-		return []models.Account{}, err
-	}
-	return user.Accounts, nil
-}
-
-func (t *TestRepo) GetAccountsForUserWith(uuid uuid.UUID) ([]models.Account, error) {
-	user, err := t.GetUserByUUID(uuid)
+func (t *TestRepo) GetAccounts(userUUID uuid.UUID) ([]models.Account, error) {
+	user, err := t.GetUserByUUID(userUUID)
 	if err != nil {
 		return user.Accounts, err
 	}
