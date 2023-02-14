@@ -12,7 +12,6 @@ import (
 )
 
 type GormUser struct {
-	gorm.Model
 	UUID      uuid.UUID     `json:"uuid" gorm:"primary_key;type:uuid"`
 	FisrtName string        `json:"firstName" gorm:"size:50;not null"`
 	LastName  string        `json:"lastName" gorm:"size:50;not null"`
@@ -22,7 +21,6 @@ type GormUser struct {
 }
 
 type GormAccount struct {
-	gorm.Model
 	UUID         uuid.UUID `json:"uuid" gorm:"primary_key;type:uuid"`
 	IBAN         string    `json:"iban" gorm:"size:250;not null;unique"`
 	Balance      uint      `json:"balance" gorm:"not null"`
@@ -32,7 +30,6 @@ type GormAccount struct {
 }
 
 type GormTransaction struct {
-	gorm.Model
 	UUID            uuid.UUID `json:"uuid" gorm:"primary_key;type:uuid"`
 	Status          string    `json:"status" gorm:"size:50;not null"`
 	SourceUUID      uuid.UUID `gorm:"not null"`

@@ -101,7 +101,6 @@ func (p *PostgresRepo) fromGormToModelTransaction(transactions []GormTransaction
 			return nil
 		}
 		modelTransaction[i] = models.Transaction{
-			ID:              tr.ID,
 			UUID:            tr.UUID,
 			Status:          tr.Status,
 			SourceUUID:      source.UUID,
@@ -169,7 +168,6 @@ func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 		return &models.User{}, err
 	}
 	user := models.User{
-		ID:        userGorm.ID,
 		UUID:      userGorm.UUID,
 		FisrtName: userGorm.FisrtName,
 		LastName:  userGorm.LastName,
@@ -211,7 +209,6 @@ func (p *PostgresRepo) GetUserByEmail(email string) (*models.User, error) {
 		return &models.User{}, err
 	}
 	user := models.User{
-		ID:        userGorm.ID,
 		UUID:      userGorm.UUID,
 		FisrtName: userGorm.FisrtName,
 		LastName:  userGorm.LastName,
@@ -270,7 +267,6 @@ func (t *TestRepo) CheckIfExistUser(user *models.User) error {
 func (p *PostgresRepo) CreateUser(user *models.User) error {
 
 	gormU := GormUser{
-		Model:     gorm.Model{},
 		UUID:      user.UUID,
 		FisrtName: user.FisrtName,
 		LastName:  user.LastName,
