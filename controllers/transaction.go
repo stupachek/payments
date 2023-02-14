@@ -48,7 +48,7 @@ func (c *Controller) NewTransaction(ctx *gin.Context) {
 	}
 	tr := core.Transaction{
 		UserUUID:        userUUID,
-		SourseUUID:      accountUUID,
+		SourceUUID:      accountUUID,
 		DestinationUUID: destinationUUID,
 		Amount:          uint(amount),
 	}

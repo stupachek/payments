@@ -19,7 +19,7 @@ var ErrInsufficientFunds = errors.New("insufficient funds")
 
 type Transaction struct {
 	UserUUID        uuid.UUID
-	SourseUUID      uuid.UUID
+	SourceUUID      uuid.UUID
 	DestinationUUID uuid.UUID
 	Amount          uint
 }
@@ -132,7 +132,7 @@ func (p *PaymentSystem) NewTransaction(tr Transaction) (models.Transaction, erro
 	if err != nil {
 		return models.Transaction{}, err
 	}
-	source, err := checkAccountExists(user.Accounts, tr.SourseUUID)
+	source, err := checkAccountExists(user.Accounts, tr.SourceUUID)
 	if err != nil {
 		return models.Transaction{}, err
 	}
@@ -141,7 +141,7 @@ func (p *PaymentSystem) NewTransaction(tr Transaction) (models.Transaction, erro
 	}
 	transaction := models.Transaction{
 		Status:          "prepared",
-		SourceUUID:      tr.SourseUUID,
+		SourceUUID:      tr.SourceUUID,
 		DestinationUUID: tr.DestinationUUID,
 		Amount:          tr.Amount,
 	}

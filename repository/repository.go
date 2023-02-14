@@ -58,7 +58,7 @@ func (t *TestRepo) CreateTransaction(transaction models.Transaction) error {
 	_, ok := t.Transaction[transaction.UUID]
 	if !ok {
 		t.Transaction[transaction.UUID] = &transaction
-		sourse, err := t.GetAccountByUUID(transaction.SourceUUID)
+		Source, err := t.GetAccountByUUID(transaction.SourceUUID)
 		if err != nil {
 			return err
 		}
@@ -66,7 +66,7 @@ func (t *TestRepo) CreateTransaction(transaction models.Transaction) error {
 		if err != nil {
 			return err
 		}
-		t.Accounts[sourse.UUID].Sources = append(t.Accounts[sourse.UUID].Sources, transaction)
+		t.Accounts[Source.UUID].Sources = append(t.Accounts[Source.UUID].Sources, transaction)
 		t.Accounts[destination.UUID].Destinations = append(t.Accounts[destination.UUID].Destinations, transaction)
 		return nil
 	}
