@@ -156,7 +156,7 @@ func (p *PaymentSystem) NewTransaction(tr Transaction) (models.Transaction, erro
 	if err != nil {
 		return models.Transaction{}, err
 	}
-	return models.Transaction{}, nil
+	return transaction, nil
 }
 
 func checkAccountExists(accounts []models.Account, accountUUID uuid.UUID) (models.Account, error) {

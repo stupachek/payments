@@ -65,7 +65,7 @@ func ConnectDataBase() *gorm.DB {
 		log.Println("We are connected to the database ", Dbdriver)
 	}
 
-	DB.AutoMigrate(&GormUser{}, &GormAccount{})
+	DB.AutoMigrate(&GormUser{}, &GormAccount{}, &GormTransaction{})
 	return DB
 
 }
