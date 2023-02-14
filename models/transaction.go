@@ -5,8 +5,9 @@ import (
 )
 
 type Transaction struct {
-	UUID          uuid.UUID `json:"uuid"`
-	Status        string    `json:"status"`
-	SourceId      uint      `json:"source_id"`
-	DestinationId uint      `json:"destination_id"`
+	UUID            uuid.UUID `json:"uuid"`
+	Status          string    `json:"status"`
+	SourceUUID      uuid.UUID `json:"source_uuid"`
+	DestinationUUID uuid.UUID `json:"destination_uuid"`
+	Amount          uint      `json:"amount"`
 }

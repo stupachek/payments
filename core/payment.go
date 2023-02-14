@@ -14,6 +14,15 @@ import (
 
 var Tokens = make(map[string]string)
 var ErrUnauthenticated = errors.New("unauthenticated")
+var ErrUnknownAccount = errors.New("unknown account")
+var ErrInsufficientFunds = errors.New("insufficient funds")
+
+type Transaction struct {
+	UserUUID        uuid.UUID
+	SourceUUID      uuid.UUID
+	DestinationUUID uuid.UUID
+	Amount          uint
+}
 
 func GetEmail(token string) (string, bool) {
 	email, ok := Tokens[token]
@@ -102,7 +111,7 @@ func (p *PaymentSystem) NewAccount(userUUID uuid.UUID) (models.Account, error) {
 		return models.Account{}, err
 	}
 	account := models.Account{}
-	account.UserId = user.ID
+	account.UserUUID = user.UUID
 	account.IBAN, err = randToken(29)
 	if err != nil {
 		return models.Account{}, err
@@ -118,6 +127,51 @@ func (p *PaymentSystem) NewAccount(userUUID uuid.UUID) (models.Account, error) {
 	return account, err
 }
 
+func (p *PaymentSystem) NewTransaction(tr Transaction) (models.Transaction, error) {
+	user, err := p.UserRepo.GetUserByUUID(tr.UserUUID)
+	if err != nil {
+		return models.Transaction{}, err
+	}
+	source, err := checkAccountExists(user.Accounts, tr.SourceUUID)
+	if err != nil {
+		return models.Transaction{}, err
+	}
+	if err := p.checkAmount(source, tr.Amount); err != nil {
+		return models.Transaction{}, err
+	}
+	transaction := models.Transaction{
+		Status:          "prepared",
+		SourceUUID:      tr.SourceUUID,
+		DestinationUUID: tr.DestinationUUID,
+		Amount:          tr.Amount,
+	}
+	transaction.UUID, err = uuid.NewRandom()
+	if err != nil {
+		return models.Transaction{}, err
+	}
+	err = p.UserRepo.CreateTransaction(transaction)
+	if err != nil {
+		return models.Transaction{}, err
+	}
+	return transaction, nil
+}
+
+func checkAccountExists(accounts []models.Account, accountUUID uuid.UUID) (models.Account, error) {
+	for _, acc := range accounts {
+		if acc.UUID == accountUUID {
+			return acc, nil
+		}
+	}
+	return models.Account{}, ErrUnknownAccount
+}
+
+func (p *PaymentSystem) checkAmount(account models.Account, amount uint) error {
+	if amount <= account.Balance {
+		return nil
+	}
+	return ErrInsufficientFunds
+}
+
 func (p *PaymentSystem) GetAccounts(userUUID uuid.UUID) ([]models.Account, error) {
-	return p.UserRepo.GetAccountsForUserWith(userUUID)
+	return p.UserRepo.GetAccounts(userUUID)
 }

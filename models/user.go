@@ -5,7 +5,6 @@ import (
 )
 
 type User struct {
-	ID        uint      `json:"-"`
 	UUID      uuid.UUID `json:"uuid"`
 	FisrtName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`

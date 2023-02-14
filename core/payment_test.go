@@ -215,8 +215,8 @@ func TestCreateNewAccountUnknownUser(t *testing.T) {
 	if !assert.IsEqual(err, repository.ErrorUnknownUser) {
 		t.Errorf("create new account error: %v", err)
 	}
-	if account.UserId != bob.ID {
-		t.Errorf("different userID : %v, exp: %v", account.UserId, bob.ID)
+	if account.UserUUID != bob.UUID {
+		t.Errorf("different userID : %v, exp: %v", account.UserUUID, bob.UUID)
 	}
 
 }
@@ -248,11 +248,69 @@ func TestGetAccounts(t *testing.T) {
 		t.Errorf("diff amount of accounts: %v exp: %v", len(accs), 1)
 	}
 
-	if accs[0].UserId != bob.ID {
-		t.Errorf("different userID : %v, exp: %v", accs[0].UserId, bob.ID)
+	if accs[0].UserUUID != bob.UUID {
+		t.Errorf("different userUUID : %v, exp: %v", accs[0].UserUUID, bob.UUID)
 	}
 	if accs[0].Balance != 0 {
 		t.Errorf("balance has to be 0")
+	}
+
+}
+
+func TestCreateTransaction(t *testing.T) {
+	testRepo := repository.NewTestRepo()
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	source, err := system.NewAccount(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	destination, err := system.NewAccount(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	tr := Transaction{
+		UserUUID:        bob.UUID,
+		SourceUUID:      source.UUID,
+		DestinationUUID: destination.UUID,
+		Amount:          0,
+	}
+	transaction, err := system.NewTransaction(tr)
+	if err != nil {
+		t.Errorf("create new transaction error: %v", err)
+	}
+	if transaction.SourceUUID != source.UUID {
+		t.Errorf("diff source uuid")
+	}
+	if transaction.DestinationUUID != destination.UUID {
+		t.Errorf("diff destination uuid")
+	}
+	accs, err := system.GetAccounts(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	for _, acc := range accs {
+		if acc.UUID == tr.SourceUUID {
+			if len(acc.Sources) != 1 {
+				t.Error("diff sources")
+			}
+		} else {
+			if len(acc.Destinations) != 1 {
+				t.Error("diff destinations")
+			}
+		}
 	}
 
 }

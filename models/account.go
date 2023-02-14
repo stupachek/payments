@@ -5,11 +5,10 @@ import (
 )
 
 type Account struct {
-	ID           uint          `json:"-"`
 	UUID         uuid.UUID     `json:"uuid"`
 	IBAN         string        `json:"iban"`
 	Balance      uint          `json:"balance"`
-	UserId       uint          `json:"-"`
+	UserUUID     uuid.UUID     `json:"user_uuid"`
 	Sources      []Transaction `json:"sources"`
 	Destinations []Transaction `json:"destination"`
 }
