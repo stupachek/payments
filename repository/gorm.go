@@ -32,8 +32,8 @@ type GormAccount struct {
 type GormTransaction struct {
 	UUID            uuid.UUID `json:"uuid" gorm:"primary_key;type:uuid"`
 	Status          string    `json:"status" gorm:"size:50;not null"`
-	SourceUUID      uuid.UUID `gorm:"not null"`
-	DestinationUUID uuid.UUID `gorm:"not null"`
+	SourceUUID      uuid.UUID `gorm:"type:uuid;not null"`
+	DestinationUUID uuid.UUID `gorm:"type:uuid;not null"`
 	Amount          uint      `gorm:"not null"`
 }
 

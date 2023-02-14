@@ -32,22 +32,14 @@ type TestRepo struct {
 }
 
 func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {
-	source, err := p.GetAccountByUUID(transaction.SourceUUID)
-	if err != nil {
-		return err
-	}
-	destination, err := p.GetAccountByUUID(transaction.DestinationUUID)
-	if err != nil {
-		return err
-	}
 	gormTransaction := GormTransaction{
 		UUID:            transaction.UUID,
 		Status:          transaction.Status,
-		SourceUUID:      source.UUID,
-		DestinationUUID: destination.UUID,
+		SourceUUID:      transaction.SourceUUID,
+		DestinationUUID: transaction.DestinationUUID,
 		Amount:          transaction.Amount,
 	}
-	err = p.DB.Create(&gormTransaction).Error
+	err := p.DB.Create(&gormTransaction).Error
 	if err != nil {
 		return err
 	}
@@ -68,8 +60,6 @@ func (t *TestRepo) CreateTransaction(transaction models.Transaction) error {
 		}
 		source.Sources = append(source.Sources, transaction)
 		destination.Destinations = append(destination.Destinations, transaction)
-		// t.Accounts[Source.UUID].Sources = append(t.Accounts[Source.UUID].Sources, transaction)
-		// t.Accounts[destination.UUID].Destinations = append(t.Accounts[destination.UUID].Destinations, transaction)
 		return nil
 	}
 	return ErrorCreated
