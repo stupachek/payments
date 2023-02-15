@@ -297,20 +297,6 @@ func TestCreateTransaction(t *testing.T) {
 	if transaction.DestinationUUID != destination.UUID {
 		t.Errorf("diff destination uuid")
 	}
-	accs, err := system.GetAccounts(bob.UUID)
-	if err != nil {
-		t.Errorf("create new account error: %v", err)
-	}
-	for _, acc := range accs {
-		if acc.UUID == tr.SourceUUID {
-			if len(acc.Sources) != 1 {
-				t.Error("diff sources")
-			}
-		} else {
-			if len(acc.Destinations) != 1 {
-				t.Error("diff destinations")
-			}
-		}
-	}
+	//TODO: get transaction
 
 }

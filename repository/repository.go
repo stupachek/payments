@@ -19,6 +19,7 @@ type UserRepository interface {
 	CreateAccount(account *models.Account) error
 	CreateTransaction(transaction models.Transaction) error
 	GetAccounts(userUUID uuid.UUID) ([]models.Account, error)
+	GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error)
 }
 
 type PostgresRepo struct {
@@ -46,20 +47,24 @@ func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {
 	return nil
 }
 
+func (t *TestRepo) GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error) {
+	return []models.Transaction{}, nil
+}
+
+func (p *PostgresRepo) GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error) {
+	var gormTransaction []GormTransaction
+	result := p.DB.Model(GormTransaction{}).Find(&gormTransaction).Where("SourceUUID = ? OR DestinationUUID = ?", accountUUID, accountUUID)
+	if result.Error != nil {
+		return []models.Transaction{}, result.Error
+	}
+	modelTransaction := p.fromGormToModelTransaction(gormTransaction)
+	return modelTransaction, nil
+}
+
 func (t *TestRepo) CreateTransaction(transaction models.Transaction) error {
 	_, ok := t.Transaction[transaction.UUID]
 	if !ok {
 		t.Transaction[transaction.UUID] = &transaction
-		source, err := t.GetAccountByUUID(transaction.SourceUUID)
-		if err != nil {
-			return err
-		}
-		destination, err := t.GetAccountByUUID(transaction.DestinationUUID)
-		if err != nil {
-			return err
-		}
-		source.Sources = append(source.Sources, transaction)
-		destination.Destinations = append(destination.Destinations, transaction)
 		return nil
 	}
 	return ErrorCreated
@@ -69,12 +74,10 @@ func (p *PostgresRepo) fromGormToModelAccount(accounts []GormAccount) []models.A
 	modelAccounts := make([]models.Account, len(accounts))
 	for i, acc := range accounts {
 		modelAccounts[i] = models.Account{
-			UUID:         acc.UUID,
-			IBAN:         acc.IBAN,
-			Balance:      acc.Balance,
-			UserUUID:     acc.UserUUID,
-			Sources:      p.fromGormToModelTransaction(acc.Sources),
-			Destinations: p.fromGormToModelTransaction(acc.Destinations),
+			UUID:     acc.UUID,
+			IBAN:     acc.IBAN,
+			Balance:  acc.Balance,
+			UserUUID: acc.UserUUID,
 		}
 	}
 
@@ -140,17 +143,15 @@ func NewTestRepo() TestRepo {
 
 func (p *PostgresRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {
 	gormAccount := GormAccount{}
-	err := p.DB.Model(GormAccount{}).Where("UUID = ?", uuid).Preload("Sources").Preload("Destinations").Take(&gormAccount)
+	err := p.DB.Model(GormAccount{}).Where("UUID = ?", uuid).Take(&gormAccount)
 	if err != nil {
 		return &models.Account{}, nil
 	}
 	account := models.Account{
-		UUID:         gormAccount.UUID,
-		IBAN:         gormAccount.IBAN,
-		Balance:      gormAccount.Balance,
-		UserUUID:     gormAccount.UserUUID,
-		Sources:      p.fromGormToModelTransaction(gormAccount.Sources),
-		Destinations: p.fromGormToModelTransaction(gormAccount.Destinations),
+		UUID:     gormAccount.UUID,
+		IBAN:     gormAccount.IBAN,
+		Balance:  gormAccount.Balance,
+		UserUUID: gormAccount.UserUUID,
 	}
 	return &account, nil
 }
