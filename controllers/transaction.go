@@ -78,3 +78,20 @@ func (c *Controller) GetTransactions(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"transactions": transactions})
 
 }
+
+func (c *Controller) SendTransaction(ctx *gin.Context) {
+	transactionUUIDstr := ctx.Param("transaction_uuid")
+	transactionUUID, err := uuid.Parse(transactionUUIDstr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = c.System.SendTransaction(transactionUUID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "sent transaction"})
+
+}

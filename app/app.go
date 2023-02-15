@@ -23,8 +23,10 @@ func New(c controllers.Controller) *App {
 	user.GET("/hello", controllers.Hello)
 	user.POST("/accounts/new", c.NewAccount)
 	user.GET("/accounts", c.GetAccounts)
-	user.POST("/accounts/:account_uuid/transactions/new", c.NewTransaction)
-	user.GET("/accounts/:account_uuid/transactions", c.GetTransactions)
+	account := public.Group("/:user_uuid/accounts/:account_uuid").Use(middleware.Auth(c), middleware.CheckAccount(c))
+	account.POST("/transactions/new", c.NewTransaction)
+	account.GET("/transactions", c.GetTransactions)
+	account.POST("/transactions/:transaction_uuid/send", c.SendTransaction)
 	return &App{
 		controller: c,
 		Router:     r,

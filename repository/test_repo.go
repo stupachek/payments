@@ -1,15 +1,38 @@
 package repository
 
 import (
+	"errors"
 	"pay/models"
 
 	"github.com/google/uuid"
 )
 
+var ErrorCreated = errors.New("user has already created")
+var ErrorUnknownUser = errors.New("user does not exist")
+var ErrorUnknownAccount = errors.New("account does not exist")
+var ErrorUnknownTransaction = errors.New("transaction does not exist")
+
 type TestRepo struct {
 	Users       map[uuid.UUID]*models.User
 	Accounts    map[uuid.UUID]*models.Account
 	Transaction map[uuid.UUID]*models.Transaction
+}
+
+func (p *TestRepo) SendTransaction(transactionUUID uuid.UUID) error {
+	transaction, ok := p.Transaction[transactionUUID]
+	if !ok {
+		return ErrorUnknownTransaction
+	}
+	transaction.Status = StatusSent
+	return nil
+}
+
+func (t *TestRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {
+	account, ok := t.Accounts[uuid]
+	if !ok {
+		return &models.Account{}, ErrorUnknownAccount
+	}
+	return account, nil
 }
 
 func (t *TestRepo) GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error) {
@@ -65,14 +88,6 @@ func (p *TestRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 		return &models.User{}, ErrorUnknownUser
 	}
 	return user, nil
-}
-
-func (p *TestRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {
-	account, ok := p.Accounts[uuid]
-	if !ok {
-		return &models.Account{}, ErrorUnknownAccount
-	}
-	return account, nil
 }
 
 func (t *TestRepo) GetUserByEmail(email string) (*models.User, error) {
