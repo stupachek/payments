@@ -36,7 +36,7 @@ func NewTestRepo() TestRepo {
 	}
 }
 
-func (t *TestRepo) GetAccounts(userUUID uuid.UUID) ([]models.Account, error) {
+func (t *TestRepo) GetAccountsForUser(userUUID uuid.UUID) ([]models.Account, error) {
 	accounts := make([]models.Account, 0)
 	for _, account := range t.Accounts {
 		if account.UserUUID == userUUID {

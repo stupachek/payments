@@ -173,5 +173,9 @@ func (p *PaymentSystem) checkAmount(account models.Account, amount uint) error {
 }
 
 func (p *PaymentSystem) GetAccounts(userUUID uuid.UUID) ([]models.Account, error) {
-	return p.UserRepo.GetAccounts(userUUID)
+	return p.UserRepo.GetAccountsForUser(userUUID)
+}
+
+func (p *PaymentSystem) GetTransactions(accountUUID uuid.UUID) ([]models.Transaction, error) {
+	return p.UserRepo.GetTransactionForAccount(accountUUID)
 }

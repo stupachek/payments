@@ -61,3 +61,20 @@ func (c *Controller) NewTransaction(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "create new transaction", "transaction": transaction})
 
 }
+
+func (c *Controller) GetTransactions(ctx *gin.Context) {
+	accountUUIDstr := ctx.Param("account_uuid")
+	accountUUID, err := uuid.Parse(accountUUIDstr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	transactions, err := c.System.GetTransactions(accountUUID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"transactions": transactions})
+
+}

@@ -18,7 +18,7 @@ type UserRepository interface {
 	GetUserByUUID(uuid uuid.UUID) (*models.User, error)
 	CreateAccount(account *models.Account) error
 	CreateTransaction(transaction models.Transaction) error
-	GetAccounts(userUUID uuid.UUID) ([]models.Account, error)
+	GetAccountsForUser(userUUID uuid.UUID) ([]models.Account, error)
 	GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error)
 }
 
@@ -68,26 +68,18 @@ func (p *PostgresRepo) fromGormToModelAccount(accounts []GormAccount) []models.A
 func (p *PostgresRepo) fromGormToModelTransaction(transactions []GormTransaction) []models.Transaction {
 	modelTransaction := make([]models.Transaction, len(transactions))
 	for i, tr := range transactions {
-		source, err := p.GetAccountByUUID(tr.SourceUUID)
-		if err != nil {
-			return nil
-		}
-		destination, err := p.GetAccountByUUID(tr.DestinationUUID)
-		if err != nil {
-			return nil
-		}
 		modelTransaction[i] = models.Transaction{
 			UUID:            tr.UUID,
 			Status:          tr.Status,
-			SourceUUID:      source.UUID,
-			DestinationUUID: destination.UUID,
+			SourceUUID:      tr.SourceUUID,
+			DestinationUUID: tr.DestinationUUID,
 			Amount:          tr.Amount,
 		}
 	}
 	return modelTransaction
 }
 
-func (p *PostgresRepo) GetAccounts(userUUID uuid.UUID) ([]models.Account, error) {
+func (p *PostgresRepo) GetAccountsForUser(userUUID uuid.UUID) ([]models.Account, error) {
 	var gormAccounts []GormAccount
 	result := p.DB.Model(GormAccount{}).Find(&gormAccounts).Where("UserUUID = ?", userUUID).Preload("Sources").Preload("Destinations")
 	if result.Error != nil {

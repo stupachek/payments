@@ -23,7 +23,8 @@ func New(c controllers.Controller) *App {
 	user.GET("/hello", controllers.Hello)
 	user.POST("/accounts/new", c.NewAccount)
 	user.GET("/accounts", c.GetAccounts)
-	user.POST("/accounts/:account_uuid/transaction/new", c.NewTransaction)
+	user.POST("/accounts/:account_uuid/transactions/new", c.NewTransaction)
+	user.GET("/accounts/:account_uuid/transactions", c.GetTransactions)
 	return &App{
 		controller: c,
 		Router:     r,
