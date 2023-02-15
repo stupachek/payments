@@ -13,7 +13,20 @@ type TestRepo struct {
 }
 
 func (t *TestRepo) GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error) {
-	return []models.Transaction{}, nil
+	transactions := make([]models.Transaction, 0)
+	for _, tr := range t.Transaction {
+		if tr.SourceUUID == accountUUID || tr.DestinationUUID == accountUUID {
+			transaction := models.Transaction{
+				UUID:            tr.UUID,
+				Status:          tr.Status,
+				SourceUUID:      tr.SourceUUID,
+				DestinationUUID: tr.DestinationUUID,
+				Amount:          tr.Amount,
+			}
+			transactions = append(transactions, transaction)
+		}
+	}
+	return transactions, nil
 }
 
 func (t *TestRepo) CreateTransaction(transaction models.Transaction) error {

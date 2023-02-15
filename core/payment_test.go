@@ -4,6 +4,7 @@ import (
 	"errors"
 	"pay/models"
 	"pay/repository"
+	"reflect"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
@@ -297,6 +298,16 @@ func TestCreateTransaction(t *testing.T) {
 	if transaction.DestinationUUID != destination.UUID {
 		t.Errorf("diff destination uuid")
 	}
-	//TODO: get transaction
+	transactionsSource, err := system.GetTransactions(source.UUID)
+	if err != nil {
+		t.Errorf("get transactions: %v", err)
+	}
+	transactionsDestination, err := system.GetTransactions(destination.UUID)
+	if err != nil {
+		t.Errorf("get transactions: %v", err)
+	}
+	if !reflect.DeepEqual(transactionsSource[0], transactionsDestination[0]) {
+		t.Error("diff transactions")
+	}
 
 }
