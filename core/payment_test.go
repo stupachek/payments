@@ -259,6 +259,38 @@ func TestGetAccounts(t *testing.T) {
 
 }
 
+func TestAddMoney(t *testing.T) {
+	testRepo := repository.NewTestRepo()
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	account, err := system.NewAccount(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	if _, err := system.AddMoney(account.UUID, 100); err != nil {
+		t.Errorf("add money error: %v", err)
+	}
+	acc, err := system.AddMoney(account.UUID, 45)
+	if err != nil {
+		t.Errorf("add money error: %v", err)
+	}
+	if acc.Balance != 145 {
+		t.Errorf("wrong balance: %v exp: %v", acc.Balance, 145)
+	}
+}
+
 func TestCreateTransactionSuccess(t *testing.T) {
 	testRepo := repository.NewTestRepo()
 	system := NewPaymentSystem(&testRepo)
@@ -412,6 +444,9 @@ func TestSendTransactionSuccess(t *testing.T) {
 	if err != nil {
 		t.Errorf("create new account error: %v", err)
 	}
+	if _, err := system.AddMoney(source.UUID, 123); err != nil {
+		t.Errorf("add money error: %v", err)
+	}
 	destination, err := system.NewAccount(bob.UUID)
 	if err != nil {
 		t.Errorf("create new account error: %v", err)
@@ -420,7 +455,7 @@ func TestSendTransactionSuccess(t *testing.T) {
 		UserUUID:        bob.UUID,
 		SourceUUID:      source.UUID,
 		DestinationUUID: destination.UUID,
-		Amount:          0,
+		Amount:          100,
 	}
 	if err := system.CheckAccountExists(bob.UUID, source.UUID); err != nil {
 		t.Errorf("unappropriate account for user: %v", err)
@@ -455,6 +490,20 @@ func TestSendTransactionSuccess(t *testing.T) {
 	}
 	if tranc.Status != "sent" {
 		t.Errorf("sent transaction error: %v", err)
+	}
+	s, err := system.UserRepo.GetAccountByUUID(source.UUID)
+	if err != nil {
+		t.Errorf("get account eeror: %v", err)
+	}
+	if s.Balance != 23 {
+		t.Errorf("diff balance: %v, exp %v", s.Balance, 23)
+	}
+	d, err := system.UserRepo.GetAccountByUUID(destination.UUID)
+	if err != nil {
+		t.Errorf("get account eeror: %v", err)
+	}
+	if d.Balance != 100 {
+		t.Errorf("diff balance: %v, exp %v", d.Balance, 100)
 	}
 
 }

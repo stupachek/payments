@@ -209,7 +209,7 @@ func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) (models.Trans
 	if err != nil {
 		return models.Transaction{}, err
 	}
-	_, err = p.UserRepo.UpdateBalance(transaction.SourceUUID, destinationBalance)
+	_, err = p.UserRepo.UpdateBalance(transaction.DestinationUUID, destinationBalance)
 	if err != nil {
 		return models.Transaction{}, err
 	}
