@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"pay/core"
+	"payment/core"
 	"strconv"
 
 	"github.com/gin-gonic/gin"

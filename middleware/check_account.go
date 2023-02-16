@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"net/http"
-	"pay/controllers"
+	"payment/controllers"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

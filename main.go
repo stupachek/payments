@@ -1,10 +1,10 @@
 package main
 
 import (
-	"pay/app"
-	"pay/controllers"
-	"pay/core"
-	"pay/repository"
+	"payment/app"
+	"payment/controllers"
+	"payment/core"
+	"payment/repository"
 )
 
 func main() {

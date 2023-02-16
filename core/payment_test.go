@@ -2,8 +2,8 @@ package core
 
 import (
 	"errors"
-	"pay/models"
-	"pay/repository"
+	"payment/models"
+	"payment/repository"
 	"reflect"
 	"testing"
 

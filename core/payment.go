@@ -4,8 +4,8 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"pay/models"
-	"pay/repository"
+	"payment/models"
+	"payment/repository"
 	"strings"
 
 	"github.com/google/uuid"

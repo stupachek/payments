@@ -2,7 +2,7 @@ package repository
 
 import (
 	"errors"
-	"pay/models"
+	"payment/models"
 
 	"github.com/google/uuid"
 )

@@ -1,8 +1,11 @@
 package app
 
 import (
-	"pay/controllers"
-	"pay/middleware"
+	"context"
+	"net/http"
+	"payment/controllers"
+	"payment/middleware"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,6 +13,7 @@ import (
 type App struct {
 	controller controllers.Controller
 	Router     *gin.Engine
+	Server     http.Server
 }
 
 func New(c controllers.Controller) *App {
@@ -24,8 +28,7 @@ func New(c controllers.Controller) *App {
 	user.GET("/hello", controllers.Hello)
 	user.POST("/accounts/new", c.NewAccount)
 	user.GET("/accounts", c.GetAccounts)
-	account := user.Group("/accounts/:account_uuid")
-	account.Use(middleware.CheckAccount(c))
+	account := user.Group("/accounts/:account_uuid").Use(middleware.CheckAccount(c))
 	account.POST("/transactions/new", c.NewTransaction)
 	account.GET("/transactions", c.GetTransactions)
 	account.POST("/transactions/:transaction_uuid/send", c.SendTransaction)
@@ -35,6 +38,17 @@ func New(c controllers.Controller) *App {
 	}
 }
 
-func (a *App) Run(port string) {
-	a.Router.Run(port)
+func (a *App) Run(port string) error {
+	server := http.Server{Addr: port, Handler: a.Router}
+	a.Server = server
+	return a.Server.ListenAndServe()
+}
+
+func (a *App) Stop() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := a.Server.Shutdown(ctx); err != nil {
+		return err
+	}
+	return nil
 }

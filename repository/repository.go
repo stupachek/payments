@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"pay/models"
+	"payment/models"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
@@ -150,7 +150,7 @@ func (p *PostgresRepo) CreateAccount(account *models.Account) error {
 
 func (p *PostgresRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {
 	gormAccount := GormAccount{}
-	err := p.DB.Model(GormAccount{}).Where("UUID = ?", uuid).Take(&gormAccount)
+	err := p.DB.Model(GormAccount{}).Where("UUID = ?", uuid).Take(&gormAccount).Error
 	if err != nil {
 		return &models.Account{}, nil
 	}
