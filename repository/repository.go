@@ -17,7 +17,7 @@ type UserRepository interface {
 	GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
 	GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error)
 	GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error)
-	UpdateBalance(accountUUID uuid.UUID, balance uint) (models.Account, error)
+	UpdateBalance(accountUUID uuid.UUID, balance uint) error
 	UpdateStatus(transactionUUID uuid.UUID, status string) (models.Transaction, error)
 }
 
@@ -25,18 +25,12 @@ type PostgresRepo struct {
 	DB *gorm.DB
 }
 
-func (p *PostgresRepo) UpdateBalance(accountUUID uuid.UUID, balance uint) (models.Account, error) {
-	account := GormAccount{}
-	err := p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Balance", balance).Take(account).Error
+func (p *PostgresRepo) UpdateBalance(accountUUID uuid.UUID, balance uint) error {
+	err := p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Balance", balance).Error
 	if err != nil {
-		return models.Account{}, err
+		return err
 	}
-	return models.Account{
-		UUID:     account.UUID,
-		IBAN:     account.IBAN,
-		Balance:  account.Balance,
-		UserUUID: account.UserUUID,
-	}, err
+	return nil
 }
 
 func (p *PostgresRepo) UpdateStatus(transactionUUID uuid.UUID, status string) (models.Transaction, error) {

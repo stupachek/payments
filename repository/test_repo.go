@@ -27,13 +27,13 @@ func (t *TestRepo) UpdateStatus(transactionUUID uuid.UUID, status string) (model
 	return *transaction, nil
 }
 
-func (t *TestRepo) UpdateBalance(accountUUID uuid.UUID, balance uint) (models.Account, error) {
+func (t *TestRepo) UpdateBalance(accountUUID uuid.UUID, balance uint) error {
 	account, ok := t.Accounts[accountUUID]
 	if !ok {
-		return models.Account{}, ErrorUnknownAccount
+		return ErrorUnknownAccount
 	}
 	account.Balance = balance
-	return *account, nil
+	return nil
 }
 
 func (t *TestRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {
