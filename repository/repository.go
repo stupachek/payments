@@ -4,7 +4,7 @@ import (
 	"payment/models"
 
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type UserRepository interface {

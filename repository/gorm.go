@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type GormUser struct {
@@ -62,7 +62,7 @@ func ConnectDataBase() *gorm.DB {
 	DbPort := os.Getenv("DB_PORT")
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", DbHost, DbUser, DbPassword, DbName, DbPort)
-	DB, err = gorm.Open(Dbdriver, dsn)
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		log.Println("Cannot connect to database ", Dbdriver)
@@ -81,7 +81,7 @@ func ConnectDataBaseWithParams(params DBParams) *gorm.DB {
 	var DB *gorm.DB
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", params.Host, params.User, params.Password, params.Name, params.Port)
-	DB, err := gorm.Open(params.Dbdriver, dsn)
+	DB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		log.Println("Cannot connect to database ", params.Dbdriver)
