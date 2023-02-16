@@ -155,8 +155,11 @@ func (p *PaymentSystem) NewTransaction(tr Transaction) (models.Transaction, erro
 
 func (p *PaymentSystem) CheckAccountExists(userUUID, accountUUID uuid.UUID) error {
 	account, err := p.UserRepo.GetAccountByUUID(accountUUID)
-	if account.UserUUID != userUUID {
+	if err != nil {
 		return err
+	}
+	if account.UserUUID != userUUID {
+		return ErrUnknownAccount
 	}
 	return nil
 }

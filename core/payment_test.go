@@ -223,6 +223,7 @@ func TestCreateNewAccountUnknownUser(t *testing.T) {
 }
 
 func TestGetAccounts(t *testing.T) {
+
 	testRepo := repository.NewTestRepo()
 	system := NewPaymentSystem(&testRepo)
 	bob := &models.User{
@@ -258,7 +259,7 @@ func TestGetAccounts(t *testing.T) {
 
 }
 
-func TestCreateTransaction(t *testing.T) {
+func TestCreateTransactionSuccess(t *testing.T) {
 	testRepo := repository.NewTestRepo()
 	system := NewPaymentSystem(&testRepo)
 	bob := &models.User{
@@ -288,6 +289,9 @@ func TestCreateTransaction(t *testing.T) {
 		DestinationUUID: destination.UUID,
 		Amount:          0,
 	}
+	if err := system.CheckAccountExists(bob.UUID, source.UUID); err != nil {
+		t.Errorf("unappropriate account for user: %v", err)
+	}
 	transaction, err := system.NewTransaction(tr)
 	if err != nil {
 		t.Errorf("create new transaction error: %v", err)
@@ -308,6 +312,149 @@ func TestCreateTransaction(t *testing.T) {
 	}
 	if !reflect.DeepEqual(transactionsSource[0], transactionsDestination[0]) {
 		t.Error("diff transactions")
+	}
+
+}
+
+func TestCreateTransactionInsufficientFunds(t *testing.T) {
+	testRepo := repository.NewTestRepo()
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	source, err := system.NewAccount(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	destination, err := system.NewAccount(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	tr := Transaction{
+		UserUUID:        bob.UUID,
+		SourceUUID:      source.UUID,
+		DestinationUUID: destination.UUID,
+		Amount:          1000,
+	}
+	if err := system.CheckAccountExists(bob.UUID, source.UUID); err != nil {
+		t.Errorf("unappropriate account for user: %v", err)
+	}
+
+	if _, err := system.NewTransaction(tr); !assert.IsEqual(err, ErrInsufficientFunds) {
+		t.Errorf("create new transaction error: %v", err)
+	}
+}
+func TestCreateTransactionsFailed(t *testing.T) {
+	testRepo := repository.NewTestRepo()
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	alice := &models.User{
+		FisrtName: "Alice",
+		LastName:  "Black",
+		Email:     "alice.black@gmail.com",
+		Password:  "alice123",
+	}
+	if err := system.Register(alice); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err = system.LoginCheck("alice.black@gmail.com", "alice123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	source, err := system.NewAccount(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	if err := system.CheckAccountExists(alice.UUID, source.UUID); !assert.IsEqual(err, ErrUnknownAccount) {
+		t.Errorf("unappropriate account for user")
+	}
+}
+
+func TestSendTransactionSuccess(t *testing.T) {
+	testRepo := repository.NewTestRepo()
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	source, err := system.NewAccount(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	destination, err := system.NewAccount(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	tr := Transaction{
+		UserUUID:        bob.UUID,
+		SourceUUID:      source.UUID,
+		DestinationUUID: destination.UUID,
+		Amount:          0,
+	}
+	if err := system.CheckAccountExists(bob.UUID, source.UUID); err != nil {
+		t.Errorf("unappropriate account for user: %v", err)
+	}
+	transaction, err := system.NewTransaction(tr)
+	if err != nil {
+		t.Errorf("create new transaction error: %v", err)
+	}
+	if transaction.SourceUUID != source.UUID {
+		t.Errorf("diff source uuid")
+	}
+	if transaction.DestinationUUID != destination.UUID {
+		t.Errorf("diff destination uuid")
+	}
+	transactionsSource, err := system.GetTransactions(source.UUID)
+	if err != nil {
+		t.Errorf("get transactions: %v", err)
+	}
+	transactionsDestination, err := system.GetTransactions(destination.UUID)
+	if err != nil {
+		t.Errorf("get transactions: %v", err)
+	}
+	if !reflect.DeepEqual(transactionsSource[0], transactionsDestination[0]) {
+		t.Error("diff transactions")
+	}
+	if err := system.SendTransaction(transaction.UUID); err != nil {
+		t.Errorf("send transaction err: %v", err)
+	}
+	tranc, err := system.UserRepo.GetTransactionByUUID(transactionsSource[0].UUID)
+	if err != nil {
+		t.Errorf("get transaction error:  %v", err)
+	}
+	if tranc.Status != "sent" {
+		t.Errorf("sent transaction error: %v", err)
 	}
 
 }
