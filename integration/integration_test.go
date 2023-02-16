@@ -8,7 +8,6 @@ import (
 	"payment/app"
 	"payment/controllers"
 	"payment/core"
-	"payment/models"
 	"payment/repository"
 	"testing"
 	"time"
@@ -84,7 +83,7 @@ func TestPaymentIntegration(t *testing.T) {
 		if _, ok := reqResult["message"]; !ok {
 			t.Fatal("create transaction error")
 		}
-		trans := reqResult["transaction"].(models.Transaction)
+		trans := reqResult["transaction"]
 		log.Print(trans)
 
 	})
