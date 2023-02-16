@@ -446,7 +446,7 @@ func TestSendTransactionSuccess(t *testing.T) {
 	if !reflect.DeepEqual(transactionsSource[0], transactionsDestination[0]) {
 		t.Error("diff transactions")
 	}
-	if err := system.SendTransaction(transaction.UUID); err != nil {
+	if _, err := system.SendTransaction(transaction.UUID); err != nil {
 		t.Errorf("send transaction err: %v", err)
 	}
 	tranc, err := system.UserRepo.GetTransactionByUUID(transactionsSource[0].UUID)

@@ -18,18 +18,22 @@ type TestRepo struct {
 	Transaction map[uuid.UUID]*models.Transaction
 }
 
-func (p *TestRepo) SendTransaction(transactionUUID, accountUUID uuid.UUID, amount uint) error {
-	account, ok := p.Accounts[accountUUID]
+func (t *TestRepo) UpdateStatus(transactionUUID uuid.UUID, status string) (models.Transaction, error) {
+	transaction, ok := t.Transaction[transactionUUID]
 	if !ok {
-		return ErrorUnknownAccount
+		return models.Transaction{}, ErrorUnknownAccount
 	}
-	transaction, ok := p.Transaction[transactionUUID]
+	transaction.Status = status
+	return *transaction, nil
+}
+
+func (t *TestRepo) UpdateBalance(accountUUID uuid.UUID, balance uint) (models.Account, error) {
+	account, ok := t.Accounts[accountUUID]
 	if !ok {
-		return ErrorUnknownTransaction
+		return models.Account{}, ErrorUnknownAccount
 	}
-	account.Balance -= transaction.Amount
-	transaction.Status = StatusSent
-	return nil
+	account.Balance = balance
+	return *account, nil
 }
 
 func (t *TestRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {

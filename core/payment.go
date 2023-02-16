@@ -12,11 +12,14 @@ import (
 	"github.com/matthewhartstonge/argon2"
 )
 
-var Tokens = make(map[string]string)
-var ErrUnauthenticated = errors.New("unauthenticated")
-var ErrUnknownAccount = errors.New("unknown account")
-var ErrInsufficientFunds = errors.New("insufficient funds")
-var ErrWrongDestination = errors.New("source equals destination")
+var (
+	StatusSent           = "sent"
+	Tokens               = make(map[string]string)
+	ErrUnauthenticated   = errors.New("unauthenticated")
+	ErrUnknownAccount    = errors.New("unknown account")
+	ErrInsufficientFunds = errors.New("insufficient funds")
+	ErrWrongDestination  = errors.New("source equals destination")
+)
 
 type Transaction struct {
 	UserUUID        uuid.UUID
@@ -183,14 +186,45 @@ func (p *PaymentSystem) GetTransactions(accountUUID uuid.UUID) ([]models.Transac
 	return p.UserRepo.GetTransactionForAccount(accountUUID)
 }
 
-func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) error {
+func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) (models.Transaction, error) {
 	transaction, err := p.UserRepo.GetTransactionByUUID(transactionUUID)
 	if err != nil {
-		return err
+		return models.Transaction{}, err
 	}
 	err = p.checkAmount(transaction.SourceUUID, transaction.Amount)
 	if err != nil {
-		return err
+		return models.Transaction{}, err
 	}
-	return p.UserRepo.SendTransaction(transactionUUID, transaction.SourceUUID, transaction.Amount)
+	sourse, err := p.UserRepo.GetAccountByUUID(transaction.SourceUUID)
+	if err != nil {
+		return models.Transaction{}, err
+	}
+	destination, err := p.UserRepo.GetAccountByUUID(transaction.DestinationUUID)
+	if err != nil {
+		return models.Transaction{}, err
+	}
+	sourceBalance := sourse.Balance - transaction.Amount
+	destinationBalance := destination.Balance + transaction.Amount
+	_, err = p.UserRepo.UpdateBalance(transaction.SourceUUID, sourceBalance)
+	if err != nil {
+		return models.Transaction{}, err
+	}
+	_, err = p.UserRepo.UpdateBalance(transaction.SourceUUID, destinationBalance)
+	if err != nil {
+		return models.Transaction{}, err
+	}
+	*transaction, err = p.UserRepo.UpdateStatus(transactionUUID, StatusSent)
+	if err != nil {
+		return models.Transaction{}, err
+	}
+	return *transaction, err
+}
+
+func (p *PaymentSystem) AddMoney(accountUUID uuid.UUID, amount uint) (models.Account, error) {
+	account, err := p.UserRepo.GetAccountByUUID(accountUUID)
+	if err != nil {
+		return models.Account{}, err
+	}
+	balance := account.Balance + amount
+	return p.UserRepo.UpdateBalance(accountUUID, balance)
 }

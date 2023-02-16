@@ -86,12 +86,12 @@ func (c *Controller) SendTransaction(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err = c.System.SendTransaction(transactionUUID)
+	transaction, err := c.System.SendTransaction(transactionUUID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "sent transaction"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "sent transaction", "transaction": transaction})
 
 }
