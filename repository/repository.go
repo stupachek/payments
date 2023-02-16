@@ -18,16 +18,41 @@ type UserRepository interface {
 	GetAccountsForUser(userUUID uuid.UUID) ([]models.Account, error)
 	GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
 	GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error)
-	SendTransaction(transactionUUID uuid.UUID) error
+	GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error)
+	SendTransaction(transactionUUID, accountUUID uuid.UUID, amount uint) error
 }
 
 type PostgresRepo struct {
 	DB *gorm.DB
 }
 
-func (p *PostgresRepo) SendTransaction(transactionUUID uuid.UUID) error {
-	return p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Update("Status", StatusSent).Error
+func (p *PostgresRepo) SendTransaction(transactionUUID, accountUUID uuid.UUID, amount uint) error {
+	err := p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Amount", gorm.Expr("Amount - ?", amount)).Error
+	if err != nil {
+		return err
+	}
+	err = p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Update("Status", StatusSent).Error
+	if err != nil {
+		return err
+	}
+	return nil
 
+}
+
+func (p *PostgresRepo) GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error) {
+	gormTransaction := GormTransaction{}
+	err := p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Take(gormTransaction).Error
+	if err != nil {
+		return &models.Transaction{}, err
+	}
+	transaction := models.Transaction{
+		UUID:            gormTransaction.UUID,
+		Status:          gormTransaction.Status,
+		SourceUUID:      gormTransaction.SourceUUID,
+		DestinationUUID: gormTransaction.DestinationUUID,
+		Amount:          gormTransaction.Amount,
+	}
+	return &transaction, err
 }
 
 func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {

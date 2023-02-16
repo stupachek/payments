@@ -128,12 +128,8 @@ func (p *PaymentSystem) NewAccount(userUUID uuid.UUID) (models.Account, error) {
 }
 
 func (p *PaymentSystem) NewTransaction(tr Transaction) (models.Transaction, error) {
-
-	source, err := p.UserRepo.GetAccountByUUID(tr.SourceUUID)
+	err := p.checkAmount(tr.SourceUUID, tr.Amount)
 	if err != nil {
-		return models.Transaction{}, err
-	}
-	if err := p.checkAmount(*source, tr.Amount); err != nil {
 		return models.Transaction{}, err
 	}
 	transaction := models.Transaction{
@@ -161,7 +157,11 @@ func (p *PaymentSystem) CheckAccountExists(userUUID, accountUUID uuid.UUID) erro
 	return nil
 }
 
-func (p *PaymentSystem) checkAmount(account models.Account, amount uint) error {
+func (p *PaymentSystem) checkAmount(accountUUID uuid.UUID, amount uint) error {
+	account, err := p.UserRepo.GetAccountByUUID(accountUUID)
+	if err != nil {
+		return err
+	}
 	if amount <= account.Balance {
 		return nil
 	}
@@ -177,5 +177,13 @@ func (p *PaymentSystem) GetTransactions(accountUUID uuid.UUID) ([]models.Transac
 }
 
 func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) error {
-	return p.UserRepo.SendTransaction(transactionUUID)
+	transaction, err := p.UserRepo.GetTransactionByUUID(transactionUUID)
+	if err != nil {
+		return err
+	}
+	err = p.checkAmount(transaction.SourceUUID, transaction.Amount)
+	if err != nil {
+		return err
+	}
+	return p.UserRepo.SendTransaction(transactionUUID, transaction.SourceUUID, transaction.Amount)
 }
