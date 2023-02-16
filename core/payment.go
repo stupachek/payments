@@ -16,6 +16,7 @@ var Tokens = make(map[string]string)
 var ErrUnauthenticated = errors.New("unauthenticated")
 var ErrUnknownAccount = errors.New("unknown account")
 var ErrInsufficientFunds = errors.New("insufficient funds")
+var ErrWrongDestination = errors.New("source equals destination")
 
 type Transaction struct {
 	UserUUID        uuid.UUID
@@ -128,6 +129,9 @@ func (p *PaymentSystem) NewAccount(userUUID uuid.UUID) (models.Account, error) {
 }
 
 func (p *PaymentSystem) NewTransaction(tr Transaction) (models.Transaction, error) {
+	if tr.SourceUUID == tr.DestinationUUID {
+		return models.Transaction{}, ErrWrongDestination
+	}
 	err := p.checkAmount(tr.SourceUUID, tr.Amount)
 	if err != nil {
 		return models.Transaction{}, err
