@@ -29,17 +29,7 @@ func (p *PostgresRepo) SendTransaction(transactionUUID uuid.UUID) error {
 	return p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Update("Status", StatusSent).Error
 
 }
-func (p *PostgresRepo) GetAccountByEmail(uuid uuid.UUID) (models.Account, error) {
-	accountGorm := GormAccount{}
-	err := p.DB.Model(GormAccount{}).Where("uuid = ?", uuid).Preload("Accounts").Take(&accountGorm).Error
-	account := models.Account{
-		UUID:     accountGorm.UUID,
-		IBAN:     accountGorm.IBAN,
-		Balance:  accountGorm.Balance,
-		UserUUID: accountGorm.UserUUID,
-	}
-	return account, err
-}
+
 func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {
 	gormTransaction := GormTransaction{
 		UUID:            transaction.UUID,
