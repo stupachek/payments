@@ -39,14 +39,7 @@ func (t *TestRepo) GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Tra
 	transactions := make([]models.Transaction, 0)
 	for _, tr := range t.Transaction {
 		if tr.SourceUUID == accountUUID || tr.DestinationUUID == accountUUID {
-			transaction := models.Transaction{
-				UUID:            tr.UUID,
-				Status:          tr.Status,
-				SourceUUID:      tr.SourceUUID,
-				DestinationUUID: tr.DestinationUUID,
-				Amount:          tr.Amount,
-			}
-			transactions = append(transactions, transaction)
+			transactions = append(transactions, *tr)
 		}
 	}
 	return transactions, nil
