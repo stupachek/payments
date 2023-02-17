@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"pay/models"
+	"payment/models"
 
 	"github.com/gin-gonic/gin"
 )

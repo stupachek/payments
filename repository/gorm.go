@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type GormUser struct {
@@ -37,6 +37,15 @@ type GormTransaction struct {
 	Amount          uint      `gorm:"not null"`
 }
 
+type DBParams struct {
+	Dbdriver string
+	Host     string
+	User     string
+	Password string
+	Name     string
+	Port     string
+}
+
 func ConnectDataBase() *gorm.DB {
 
 	var DB *gorm.DB
@@ -53,7 +62,7 @@ func ConnectDataBase() *gorm.DB {
 	DbPort := os.Getenv("DB_PORT")
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", DbHost, DbUser, DbPassword, DbName, DbPort)
-	DB, err = gorm.Open(Dbdriver, dsn)
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		log.Println("Cannot connect to database ", Dbdriver)
@@ -65,4 +74,28 @@ func ConnectDataBase() *gorm.DB {
 	DB.AutoMigrate(&GormUser{}, &GormAccount{}, &GormTransaction{})
 	return DB
 
+}
+
+func ConnectDataBaseWithParams(params DBParams) *gorm.DB {
+
+	var DB *gorm.DB
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", params.Host, params.User, params.Password, params.Name, params.Port)
+	DB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
+	if err != nil {
+		log.Println("Cannot connect to database ", params.Dbdriver)
+		log.Fatal("connection error:", err)
+	} else {
+		log.Println("We are connected to the database ", params.Dbdriver)
+	}
+
+	DB.AutoMigrate(&GormUser{}, &GormAccount{}, &GormTransaction{})
+	return DB
+
+}
+func ClearData(db *gorm.DB) {
+	db.Where("1 = 1").Delete(&GormTransaction{})
+	db.Where("1 = 1").Delete(&GormAccount{})
+	db.Where("1 = 1").Delete(&GormUser{})
 }

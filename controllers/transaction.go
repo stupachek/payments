@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"pay/core"
+	"payment/core"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -59,5 +59,39 @@ func (c *Controller) NewTransaction(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "create new transaction", "transaction": transaction})
+
+}
+
+func (c *Controller) GetTransactions(ctx *gin.Context) {
+	accountUUIDstr := ctx.Param("account_uuid")
+	accountUUID, err := uuid.Parse(accountUUIDstr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	transactions, err := c.System.GetTransactions(accountUUID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"transactions": transactions})
+
+}
+
+func (c *Controller) SendTransaction(ctx *gin.Context) {
+	transactionUUIDstr := ctx.Param("transaction_uuid")
+	transactionUUID, err := uuid.Parse(transactionUUIDstr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	transaction, err := c.System.SendTransaction(transactionUUID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "sent transaction", "transaction": transaction})
 
 }
