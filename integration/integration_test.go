@@ -102,12 +102,12 @@ func TestPaymentIntegration(t *testing.T) {
 		if _, ok := reqResult["message"]; !ok {
 			t.Fatal("send transaction error")
 		}
-		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/show-balance", userUUID, sourceUUID)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v", userUUID, sourceUUID)
 		reqResult = sendReq(t, "GET", url, nil, auth)
 		if balance := reqResult["balance"].(float64); balance != 10 {
 			t.Fatalf("wrong balance :%v, exp:%v", balance, 10)
 		}
-		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/show-balance", userUUID, destinationUUID)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v", userUUID, destinationUUID)
 		reqResult = sendReq(t, "GET", url, nil, auth)
 		if balance := reqResult["balance"].(float64); balance != 50 {
 			t.Fatalf("wrong balance :%v, exp:%v", balance, 50)
@@ -117,8 +117,8 @@ func TestPaymentIntegration(t *testing.T) {
 	t.Run("wrongAccount", func(t *testing.T) {
 		inputBob := controllers.RegisterInput{
 			FisrtName: "Bob",
-			LastName:  "Blavk",
-			Email:     "asdf@qwe.io",
+			LastName:  "Evans",
+			Email:     "evans@gmail.com",
 			Password:  "qwerty",
 		}
 		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", inputBob, nil)
@@ -185,8 +185,8 @@ func TestPaymentIntegration(t *testing.T) {
 	t.Run("unauthenticated", func(t *testing.T) {
 		inputBob := controllers.RegisterInput{
 			FisrtName: "Bob",
-			LastName:  "Blavk",
-			Email:     "asdf@qwe.io",
+			LastName:  "Potter",
+			Email:     "bob.potter@gmail.com",
 			Password:  "qwerty",
 		}
 		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", inputBob, nil)
@@ -204,8 +204,8 @@ func TestPaymentIntegration(t *testing.T) {
 	t.Run("insufficientFunds", func(t *testing.T) {
 		input := controllers.RegisterInput{
 			FisrtName: "Bob",
-			LastName:  "Blavk",
-			Email:     "asdf@qwe.io",
+			LastName:  "Smith",
+			Email:     "smith@ui.o",
 			Password:  "qwerty",
 		}
 		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", input, nil)
@@ -253,12 +253,12 @@ func TestPaymentIntegration(t *testing.T) {
 		if err := reqResult["error"]; err != "insufficient funds" {
 			t.Fatalf("error: %v, exp: %v", err, "insufficient funds")
 		}
-		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/show-balance", userUUID, sourceUUID)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v", userUUID, sourceUUID)
 		reqResult = sendReq(t, "GET", url, nil, auth)
 		if balance := reqResult["balance"].(float64); balance != 60 {
 			t.Fatalf("wrong balance :%v, exp:%v", balance, 60)
 		}
-		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/show-balance", userUUID, destinationUUID)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v", userUUID, destinationUUID)
 		reqResult = sendReq(t, "GET", url, nil, auth)
 		if balance := reqResult["balance"].(float64); balance != 0 {
 			t.Fatalf("wrong balance :%v, exp:%v", balance, 0)
@@ -268,8 +268,8 @@ func TestPaymentIntegration(t *testing.T) {
 	t.Run("insufficientFundsOnSend", func(t *testing.T) {
 		input := controllers.RegisterInput{
 			FisrtName: "Bob",
-			LastName:  "Blavk",
-			Email:     "asdf@qwe.io",
+			LastName:  "Taylor",
+			Email:     "taylor.f@i.ua",
 			Password:  "qwerty",
 		}
 		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", input, nil)
@@ -343,12 +343,12 @@ func TestPaymentIntegration(t *testing.T) {
 			t.Fatalf("error: %v, exp: %v", err, "insufficient funds")
 		}
 
-		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/show-balance", userUUID, sourceUUID)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v", userUUID, sourceUUID)
 		reqResult = sendReq(t, "GET", url, nil, auth)
 		if balance := reqResult["balance"].(float64); balance != 30 {
 			t.Fatalf("wrong balance :%v, exp:%v", balance, 30)
 		}
-		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/show-balance", userUUID, destinationUUID)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v", userUUID, destinationUUID)
 		reqResult = sendReq(t, "GET", url, nil, auth)
 		if balance := reqResult["balance"].(float64); balance != 70 {
 			t.Fatalf("wrong balance :%v, exp:%v", balance, 70)

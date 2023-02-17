@@ -86,3 +86,19 @@ func (c *Controller) ShowBalance(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"balance": balance})
 
 }
+
+func (c *Controller) GetAccount(ctx *gin.Context) {
+	accountUUIDstr := ctx.Param("account_uuid")
+	accountUUID, err := uuid.Parse(accountUUIDstr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	account, err := c.System.GetAccount(accountUUID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"uuid": account.UUID, "iban": account.IBAN, "balance": account.Balance})
+
+}
