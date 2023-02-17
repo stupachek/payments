@@ -83,8 +83,8 @@ func TestPaymentIntegration(t *testing.T) {
 			t.Fatal("add money error")
 		}
 		account := reqResult["account"].(map[string]any)
-		money := account["balance"].(string)
-		if money != "10000" {
+		money := account["balance"].(float64)
+		if money != 10000 {
 			t.Fatalf("balance %v, exp: %v", money, 10000)
 		}
 		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/new", userUUID, sourceUUID)
@@ -100,10 +100,10 @@ func TestPaymentIntegration(t *testing.T) {
 		transUUID := trans["uuid"].(string)
 		log.Print(trans)
 		log.Print(transUUID)
-		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/%v/new", userUUID, sourceUUID, transUUID)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/%v/send", userUUID, sourceUUID, transUUID)
 		reqResult = post(t, url, nil, auth)
 		if _, ok := reqResult["message"]; !ok {
-			t.Fatal("create transaction error")
+			t.Fatal("send transaction error")
 		}
 
 	})

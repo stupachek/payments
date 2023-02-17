@@ -213,11 +213,15 @@ func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) (models.Trans
 	if err != nil {
 		return models.Transaction{}, err
 	}
-	*transaction, err = p.UserRepo.UpdateStatus(transactionUUID, StatusSent)
+	err = p.UserRepo.UpdateStatus(transactionUUID, StatusSent)
 	if err != nil {
 		return models.Transaction{}, err
 	}
-	return *transaction, err
+	tr, err := p.UserRepo.GetTransactionByUUID(transactionUUID)
+	if err != nil {
+		return models.Transaction{}, err
+	}
+	return *tr, nil
 }
 
 func (p *PaymentSystem) AddMoney(accountUUID uuid.UUID, amount uint) (models.Account, error) {

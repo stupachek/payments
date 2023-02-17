@@ -18,13 +18,13 @@ type TestRepo struct {
 	Transaction map[uuid.UUID]*models.Transaction
 }
 
-func (t *TestRepo) UpdateStatus(transactionUUID uuid.UUID, status string) (models.Transaction, error) {
+func (t *TestRepo) UpdateStatus(transactionUUID uuid.UUID, status string) error {
 	transaction, ok := t.Transaction[transactionUUID]
 	if !ok {
-		return models.Transaction{}, ErrorUnknownAccount
+		return ErrorUnknownAccount
 	}
 	transaction.Status = status
-	return *transaction, nil
+	return nil
 }
 
 func (t *TestRepo) UpdateBalance(accountUUID uuid.UUID, balance uint) error {

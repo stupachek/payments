@@ -67,6 +67,6 @@ func (c *Controller) AddMoney(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"massege": "add money", "account": account})
+	ctx.JSON(http.StatusOK, gin.H{"message": "add money", "account": account})
 
 }
