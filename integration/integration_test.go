@@ -76,7 +76,7 @@ func TestPaymentIntegration(t *testing.T) {
 		destinationUUID := reqResult["uuid"].(string)
 		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/add-money", userUUID, sourceUUID)
 		inputAddMoney := controllers.AddMoneyInput{
-			Amount: "10000",
+			Amount: "60",
 		}
 		reqResult = sendReq(t, "POST", url, inputAddMoney, auth)
 		if _, ok := reqResult["message"]; !ok {
@@ -84,13 +84,13 @@ func TestPaymentIntegration(t *testing.T) {
 		}
 		account := reqResult["account"].(map[string]any)
 		money := account["balance"].(float64)
-		if money != 10000 {
-			t.Fatalf("balance %v, exp: %v", money, 10000)
+		if money != 60 {
+			t.Fatalf("balance %v, exp: %v", money, 60)
 		}
 		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/new", userUUID, sourceUUID)
 		inputTr := controllers.TransactionInput{
 			DestinationUUID: destinationUUID,
-			Amount:          "0",
+			Amount:          "50",
 		}
 		reqResult = sendReq(t, "POST", url, inputTr, auth)
 		if _, ok := reqResult["message"]; !ok {
@@ -104,6 +104,16 @@ func TestPaymentIntegration(t *testing.T) {
 		reqResult = sendReq(t, "POST", url, nil, auth)
 		if _, ok := reqResult["message"]; !ok {
 			t.Fatal("send transaction error")
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/show-balance", userUUID, sourceUUID)
+		reqResult = sendReq(t, "GET", url, nil, auth)
+		if balance := reqResult["balance"].(float64); balance != 10 {
+			t.Fatalf("wrong balance :%v, exp:%v", balance, 10)
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/show-balance", userUUID, destinationUUID)
+		reqResult = sendReq(t, "GET", url, nil, auth)
+		if balance := reqResult["balance"].(float64); balance != 50 {
+			t.Fatalf("wrong balance :%v, exp:%v", balance, 50)
 		}
 
 	})
