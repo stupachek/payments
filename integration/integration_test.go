@@ -182,6 +182,25 @@ func TestPaymentIntegration(t *testing.T) {
 		}
 
 	})
+	t.Run("unauthenticated", func(t *testing.T) {
+		inputBob := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Blavk",
+			Email:     "asdf@qwe.io",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", inputBob, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var userUUIDBob string = reqResult["uuid"].(string)
+		url := fmt.Sprintf("http://localhost:8080/users/%v/accounts/new", userUUIDBob)
+		reqResult = sendReq(t, "POST", url, nil, nil)
+		if err := reqResult["error"]; err != "unauthenticated" {
+			t.Fatalf("error: %v, exp: %v", err, "unauthenticated")
+		}
+
+	})
 }
 
 func sendReq(t *testing.T, method string, url string, inputT interface{}, headers map[string]string) map[string]any {
