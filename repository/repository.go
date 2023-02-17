@@ -26,19 +26,11 @@ type PostgresRepo struct {
 }
 
 func (p *PostgresRepo) UpdateBalance(accountUUID uuid.UUID, balance uint) error {
-	err := p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Balance", balance).Error
-	if err != nil {
-		return err
-	}
-	return nil
+	return p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Balance", balance).Error
 }
 
 func (p *PostgresRepo) UpdateStatus(transactionUUID uuid.UUID, status string) error {
-	err := p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Update("Status", status).Error
-	if err != nil {
-		return err
-	}
-	return err
+	return p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Update("Status", status).Error
 }
 
 func (p *PostgresRepo) GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error) {
