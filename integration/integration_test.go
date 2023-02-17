@@ -265,6 +265,96 @@ func TestPaymentIntegration(t *testing.T) {
 		}
 
 	})
+	t.Run("insufficientFundsOnSend", func(t *testing.T) {
+		input := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Blavk",
+			Email:     "asdf@qwe.io",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", input, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var userUUID string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", input, nil)
+		token, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		url := fmt.Sprintf("http://localhost:8080/users/%v/accounts/new", userUUID)
+		auth := make(map[string]string)
+		auth["Authorization"] = token
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		sourceUUID := reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		destinationUUID := reqResult["uuid"].(string)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/add-money", userUUID, sourceUUID)
+		inputAddMoney := controllers.AddMoneyInput{
+			Amount: "100",
+		}
+		reqResult = sendReq(t, "POST", url, inputAddMoney, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("add money error")
+		}
+		account := reqResult["account"].(map[string]any)
+		money := account["balance"].(float64)
+		if money != 100 {
+			t.Fatalf("balance %v, exp: %v", money, 100)
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/new", userUUID, sourceUUID)
+		inputTr1 := controllers.TransactionInput{
+			DestinationUUID: destinationUUID,
+			Amount:          "70",
+		}
+		reqResult = sendReq(t, "POST", url, inputTr1, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatalf("create transaction error")
+		}
+		trans1 := reqResult["transaction"].(map[string]any)
+		trans1UUID := trans1["uuid"].(string)
+
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/new", userUUID, sourceUUID)
+		inputTr2 := controllers.TransactionInput{
+			DestinationUUID: destinationUUID,
+			Amount:          "50",
+		}
+		reqResult = sendReq(t, "POST", url, inputTr2, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatalf("create transaction error")
+		}
+		trans2 := reqResult["transaction"].(map[string]any)
+		trans2UUID := trans2["uuid"].(string)
+
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/%v/send", userUUID, sourceUUID, trans1UUID)
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("send transaction error")
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/%v/send", userUUID, sourceUUID, trans2UUID)
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if err := reqResult["error"]; err != "insufficient funds" {
+			t.Fatalf("error: %v, exp: %v", err, "insufficient funds")
+		}
+
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/show-balance", userUUID, sourceUUID)
+		reqResult = sendReq(t, "GET", url, nil, auth)
+		if balance := reqResult["balance"].(float64); balance != 30 {
+			t.Fatalf("wrong balance :%v, exp:%v", balance, 30)
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/show-balance", userUUID, destinationUUID)
+		reqResult = sendReq(t, "GET", url, nil, auth)
+		if balance := reqResult["balance"].(float64); balance != 70 {
+			t.Fatalf("wrong balance :%v, exp:%v", balance, 70)
+		}
+
+	})
 }
 
 func sendReq(t *testing.T, method string, url string, inputT interface{}, headers map[string]string) map[string]any {
