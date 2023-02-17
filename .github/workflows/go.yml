@@ -13,6 +13,18 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: payment
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
     - uses: actions/checkout@v3
 
@@ -24,5 +36,15 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Test
+    - name: Unit test
       run: go test -v -short ./...
+    - name: Integration test
+      run: go test -v Integration ./...
+      env: 
+        DB_HOST: db
+        DB_DRIVER: postgres
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        DB_NAME: payment
+        DB_PORT: 5432
+

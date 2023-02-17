@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -37,32 +36,36 @@ type GormTransaction struct {
 	Amount          uint      `gorm:"not null"`
 }
 
-type DBParams struct {
-	Dbdriver string
-	Host     string
-	User     string
-	Password string
-	Name     string
-	Port     string
-}
-
 func ConnectDataBase() *gorm.DB {
 
 	var DB *gorm.DB
-	err := godotenv.Load(".env")
-
-	if err != nil {
-		log.Fatalf("Error loading .env file")
+	Dbdriver, ok := os.LookupEnv("DB_DRIVER")
+	if !ok {
+		log.Fatal("please specify DB_DRIVER")
 	}
-	Dbdriver := os.Getenv("DB_DRIVER")
-	DbHost := os.Getenv("DB_HOST")
-	DbUser := os.Getenv("DB_USER")
-	DbPassword := os.Getenv("DB_PASSWORD")
-	DbName := os.Getenv("DB_NAME")
-	DbPort := os.Getenv("DB_PORT")
+	DbHost, ok := os.LookupEnv("DB_HOST")
+	if !ok {
+		log.Fatal("please specify DB_HOST")
+	}
+	DbUser, ok := os.LookupEnv("DB_USER")
+	if !ok {
+		log.Fatal("please specify DB_USER")
+	}
+	DbPassword, ok := os.LookupEnv("DB_PASSWORD")
+	if !ok {
+		log.Fatal("please specify DB_PASSWORD")
+	}
+	DbName, ok := os.LookupEnv("DB_NAME")
+	if !ok {
+		log.Fatal("please specify DB_NAME")
+	}
+	DbPort, ok := os.LookupEnv("DB_PORT")
+	if !ok {
+		log.Fatal("please specify DB_PORT")
+	}
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", DbHost, DbUser, DbPassword, DbName, DbPort)
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	DB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		log.Println("Cannot connect to database ", Dbdriver)
@@ -76,24 +79,6 @@ func ConnectDataBase() *gorm.DB {
 
 }
 
-func ConnectDataBaseWithParams(params DBParams) *gorm.DB {
-
-	var DB *gorm.DB
-
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", params.Host, params.User, params.Password, params.Name, params.Port)
-	DB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-
-	if err != nil {
-		log.Println("Cannot connect to database ", params.Dbdriver)
-		log.Fatal("connection error:", err)
-	} else {
-		log.Println("We are connected to the database ", params.Dbdriver)
-	}
-
-	DB.AutoMigrate(&GormUser{}, &GormAccount{}, &GormTransaction{})
-	return DB
-
-}
 func ClearData(db *gorm.DB) {
 	db.Where("1 = 1").Delete(&GormTransaction{})
 	db.Where("1 = 1").Delete(&GormAccount{})
