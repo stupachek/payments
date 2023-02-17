@@ -237,3 +237,12 @@ func (p *PaymentSystem) AddMoney(accountUUID uuid.UUID, amount uint) (models.Acc
 	}
 	return *account, nil
 }
+
+func (p *PaymentSystem) ShowBalance(accountUUID uuid.UUID) (uint, error) {
+	account, err := p.UserRepo.GetAccountByUUID(accountUUID)
+	if err != nil {
+		return 0, err
+	}
+	return account.Balance, nil
+
+}

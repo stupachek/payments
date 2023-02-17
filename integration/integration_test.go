@@ -48,12 +48,12 @@ func TestPaymentIntegration(t *testing.T) {
 			Email:     "asdf@qwe.io",
 			Password:  "qwerty",
 		}
-		reqResult := post(t, "http://localhost:8080/users/register", input, nil)
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", input, nil)
 		if _, ok := reqResult["message"]; !ok {
 			t.Fatal("error register")
 		}
 		var userUUID string = reqResult["uuid"].(string)
-		reqResult = post(t, "http://localhost:8080/users/login", input, nil)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", input, nil)
 		token, ok := reqResult["token"].(string)
 		if !ok {
 			t.Fatal("error login")
@@ -64,12 +64,12 @@ func TestPaymentIntegration(t *testing.T) {
 		for k := range reqResult {
 			delete(reqResult, k)
 		}
-		reqResult = post(t, url, nil, auth)
+		reqResult = sendReq(t, "POST", url, nil, auth)
 		if _, ok := reqResult["message"]; !ok {
 			t.Fatal("create account error")
 		}
 		sourceUUID := reqResult["uuid"].(string)
-		reqResult = post(t, url, nil, auth)
+		reqResult = sendReq(t, "POST", url, nil, auth)
 		if _, ok := reqResult["message"]; !ok {
 			t.Fatal("create account error")
 		}
@@ -78,7 +78,7 @@ func TestPaymentIntegration(t *testing.T) {
 		inputAddMoney := controllers.AddMoneyInput{
 			Amount: "10000",
 		}
-		reqResult = post(t, url, inputAddMoney, auth)
+		reqResult = sendReq(t, "POST", url, inputAddMoney, auth)
 		if _, ok := reqResult["message"]; !ok {
 			t.Fatal("add money error")
 		}
@@ -92,7 +92,7 @@ func TestPaymentIntegration(t *testing.T) {
 			DestinationUUID: destinationUUID,
 			Amount:          "0",
 		}
-		reqResult = post(t, url, inputTr, auth)
+		reqResult = sendReq(t, "POST", url, inputTr, auth)
 		if _, ok := reqResult["message"]; !ok {
 			t.Fatal("create transaction error")
 		}
@@ -101,7 +101,7 @@ func TestPaymentIntegration(t *testing.T) {
 		log.Print(trans)
 		log.Print(transUUID)
 		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/%v/send", userUUID, sourceUUID, transUUID)
-		reqResult = post(t, url, nil, auth)
+		reqResult = sendReq(t, "POST", url, nil, auth)
 		if _, ok := reqResult["message"]; !ok {
 			t.Fatal("send transaction error")
 		}
@@ -109,12 +109,12 @@ func TestPaymentIntegration(t *testing.T) {
 	})
 }
 
-func post(t *testing.T, url string, inputT interface{}, headers map[string]string) map[string]any {
+func sendReq(t *testing.T, method string, url string, inputT interface{}, headers map[string]string) map[string]any {
 	input, err := json.Marshal(inputT)
 	if err != nil {
 		t.Error(err)
 	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(input))
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(input))
 	if err != nil {
 		t.Error(err)
 	}

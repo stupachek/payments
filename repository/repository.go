@@ -34,8 +34,7 @@ func (p *PostgresRepo) UpdateBalance(accountUUID uuid.UUID, balance uint) error 
 }
 
 func (p *PostgresRepo) UpdateStatus(transactionUUID uuid.UUID, status string) error {
-	transaction := GormTransaction{}
-	err := p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Update("Status", status).Take(transaction).Error
+	err := p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Update("Status", status).Error
 	if err != nil {
 		return err
 	}
@@ -43,9 +42,9 @@ func (p *PostgresRepo) UpdateStatus(transactionUUID uuid.UUID, status string) er
 }
 
 func (p *PostgresRepo) GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error) {
-	gormTransaction := GormTransaction{}
-	err := p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Take(gormTransaction).Error
-	if err != nil {
+	var gormTransaction GormTransaction
+	result := p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Take(&gormTransaction)
+	if err := result.Error; err != nil {
 		return &models.Transaction{}, err
 	}
 	transaction := models.Transaction{
@@ -55,7 +54,7 @@ func (p *PostgresRepo) GetTransactionByUUID(transactionUUID uuid.UUID) (*models.
 		DestinationUUID: gormTransaction.DestinationUUID,
 		Amount:          gormTransaction.Amount,
 	}
-	return &transaction, err
+	return &transaction, nil
 }
 
 func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {
@@ -114,8 +113,8 @@ func (p *PostgresRepo) fromGormToModelTransaction(transactions []GormTransaction
 func (p *PostgresRepo) GetAccountsForUser(userUUID uuid.UUID) ([]models.Account, error) {
 	var gormAccounts []GormAccount
 	result := p.DB.Model(GormAccount{}).Where("User_UUID = ?", userUUID).Find(&gormAccounts)
-	if result.Error != nil {
-		return []models.Account{}, result.Error
+	if err := result.Error; err != nil {
+		return []models.Account{}, err
 	}
 	modelAccounts := p.fromGormToModelAccount(gormAccounts)
 	return modelAccounts, nil

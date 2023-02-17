@@ -70,3 +70,19 @@ func (c *Controller) AddMoney(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "add money", "account": account})
 
 }
+
+func (c *Controller) ShowBalance(ctx *gin.Context) {
+	accountUUIDstr := ctx.Param("account_uuid")
+	accountUUID, err := uuid.Parse(accountUUIDstr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	balance, err := c.System.ShowBalance(accountUUID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"balance": balance})
+
+}

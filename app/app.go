@@ -29,6 +29,7 @@ func New(c controllers.Controller) *App {
 	user.POST("/accounts/new", c.NewAccount)
 	user.GET("/accounts", c.GetAccounts)
 	account := user.Group("/accounts/:account_uuid").Use(middleware.CheckAccount(c))
+	account.GET("/show-balance", c.ShowBalance)
 	account.POST("/transactions/new", c.NewTransaction)
 	account.GET("/transactions", c.GetTransactions)
 	account.POST("/add-money", c.AddMoney)

@@ -491,19 +491,13 @@ func TestSendTransactionSuccess(t *testing.T) {
 	if tranc.Status != "sent" {
 		t.Errorf("sent transaction error: %v", err)
 	}
-	s, err := system.UserRepo.GetAccountByUUID(source.UUID)
-	if err != nil {
-		t.Errorf("get account eeror: %v", err)
+
+	if balance, _ := system.ShowBalance(source.UUID); balance != 23 {
+		t.Errorf("diff balance: %v, exp %v", balance, 23)
 	}
-	if s.Balance != 23 {
-		t.Errorf("diff balance: %v, exp %v", s.Balance, 23)
-	}
-	d, err := system.UserRepo.GetAccountByUUID(destination.UUID)
-	if err != nil {
-		t.Errorf("get account eeror: %v", err)
-	}
-	if d.Balance != 100 {
-		t.Errorf("diff balance: %v, exp %v", d.Balance, 100)
+
+	if balance, _ := system.ShowBalance(destination.UUID); balance != 100 {
+		t.Errorf("diff balance: %v, exp %v", balance, 100)
 	}
 
 }
