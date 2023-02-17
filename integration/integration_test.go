@@ -61,9 +61,6 @@ func TestPaymentIntegration(t *testing.T) {
 		url := fmt.Sprintf("http://localhost:8080/users/%v/accounts/new", userUUID)
 		auth := make(map[string]string)
 		auth["Authorization"] = token
-		for k := range reqResult {
-			delete(reqResult, k)
-		}
 		reqResult = sendReq(t, "POST", url, nil, auth)
 		if _, ok := reqResult["message"]; !ok {
 			t.Fatal("create account error")
@@ -114,6 +111,74 @@ func TestPaymentIntegration(t *testing.T) {
 		reqResult = sendReq(t, "GET", url, nil, auth)
 		if balance := reqResult["balance"].(float64); balance != 50 {
 			t.Fatalf("wrong balance :%v, exp:%v", balance, 50)
+		}
+
+	})
+	t.Run("wrongAccount", func(t *testing.T) {
+		inputBob := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Blavk",
+			Email:     "asdf@qwe.io",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", inputBob, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var userUUIDBob string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputBob, nil)
+		tokenBob, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		url := fmt.Sprintf("http://localhost:8080/users/%v/accounts/new", userUUIDBob)
+		authBob := make(map[string]string)
+		authBob["Authorization"] = tokenBob
+		reqResult = sendReq(t, "POST", url, nil, authBob)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		sourceUUID := reqResult["uuid"].(string)
+		inputAddMoney := controllers.AddMoneyInput{
+			Amount: "60",
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/add-money", userUUIDBob, sourceUUID)
+		reqResult = sendReq(t, "POST", url, inputAddMoney, authBob)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("add money error")
+		}
+		inputAlice := controllers.RegisterInput{
+			FisrtName: "Alice",
+			LastName:  "Potter",
+			Email:     "potter@gmail.com",
+			Password:  "potter123",
+		}
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/register", inputAlice, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var userUUIDAlice string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputAlice, nil)
+		tokenAlice, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/new", userUUIDAlice)
+		authAlice := make(map[string]string)
+		authAlice["Authorization"] = tokenAlice
+		reqResult = sendReq(t, "POST", url, nil, authAlice)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		destinationUUID := reqResult["uuid"].(string)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/new", userUUIDAlice, sourceUUID)
+		inputTr := controllers.TransactionInput{
+			DestinationUUID: destinationUUID,
+			Amount:          "50",
+		}
+		reqResult = sendReq(t, "POST", url, inputTr, authAlice)
+		if err := reqResult["error"]; err != "wrong account" {
+			t.Fatalf("error: %v, exp:%v", err, "wrong account")
 		}
 
 	})
