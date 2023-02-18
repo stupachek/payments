@@ -7,7 +7,6 @@ require (
 	github.com/go-playground/assert/v2 v2.2.0
 	github.com/goccy/go-json v0.10.0
 	github.com/google/uuid v1.3.0
-	github.com/joho/godotenv v1.5.1
 	github.com/matthewhartstonge/argon2 v0.3.2
 )
 

@@ -19,15 +19,8 @@ func TestPaymentIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
-	params := repository.DBParams{
-		Dbdriver: "postgres",
-		Host:     "127.0.0.1 ",
-		User:     "postgres",
-		Password: "postgres",
-		Name:     "qwerty",
-		Port:     "5432",
-	}
-	DB := repository.ConnectDataBaseWithParams(params)
+
+	DB := repository.ConnectDataBase()
 	repository.ClearData(DB)
 	userRepo := repository.NewGormUserRepo(DB)
 	system := core.NewPaymentSystem(userRepo)
