@@ -7,4 +7,5 @@ Project "Payments"  is [final task](https://drive.google.com/file/d/1X7sKViRpL8t
 docker-compose up --build
 ```
 
-## The HTTP server runs on localhost:8080
+## Usage
+The HTTP server runs on localhost:8080
