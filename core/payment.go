@@ -187,33 +187,37 @@ func (p *PaymentSystem) GetTransactions(accountUUID uuid.UUID) ([]models.Transac
 }
 
 func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) (models.Transaction, error) {
-	transaction, err := p.Repo.GetTransactionByUUID(transactionUUID)
-	if err != nil {
-		return models.Transaction{}, err
-	}
-	err = p.checkAmount(transaction.SourceUUID, transaction.Amount)
-	if err != nil {
-		return models.Transaction{}, err
-	}
-	sourse, err := p.Repo.GetAccountByUUID(transaction.SourceUUID)
-	if err != nil {
-		return models.Transaction{}, err
-	}
-	destination, err := p.Repo.GetAccountByUUID(transaction.DestinationUUID)
-	if err != nil {
-		return models.Transaction{}, err
-	}
-	sourceBalance := sourse.Balance - transaction.Amount
-	destinationBalance := destination.Balance + transaction.Amount
-	err = p.Repo.UpdateBalance(transaction.SourceUUID, sourceBalance)
-	if err != nil {
-		return models.Transaction{}, err
-	}
-	err = p.Repo.UpdateBalance(transaction.DestinationUUID, destinationBalance)
-	if err != nil {
-		return models.Transaction{}, err
-	}
-	err = p.Repo.UpdateStatus(transactionUUID, StatusSent)
+	err := p.Repo.Transaction(
+		func(repo repository.Repository) error {
+			transaction, err := p.Repo.GetTransactionByUUID(transactionUUID)
+			if err != nil {
+				return err
+			}
+			err = p.checkAmount(transaction.SourceUUID, transaction.Amount)
+			if err != nil {
+				return err
+			}
+			sourse, err := p.Repo.GetAccountByUUID(transaction.SourceUUID)
+			if err != nil {
+				return err
+			}
+			destination, err := p.Repo.GetAccountByUUID(transaction.DestinationUUID)
+			if err != nil {
+				return err
+			}
+			sourceBalance := sourse.Balance - transaction.Amount
+			destinationBalance := destination.Balance + transaction.Amount
+			err = p.Repo.UpdateBalance(transaction.SourceUUID, sourceBalance)
+			if err != nil {
+				return err
+			}
+			err = p.Repo.UpdateBalance(transaction.DestinationUUID, destinationBalance)
+			if err != nil {
+				return err
+			}
+			err = p.Repo.UpdateStatus(transactionUUID, StatusSent)
+			return err
+		})
 	if err != nil {
 		return models.Transaction{}, err
 	}

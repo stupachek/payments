@@ -19,10 +19,20 @@ type Repository interface {
 	GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error)
 	UpdateBalance(accountUUID uuid.UUID, balance uint) error
 	UpdateStatus(transactionUUID uuid.UUID, status string) error
+	Transaction(callback func(repo Repository) error) error
 }
 
 type PostgresRepo struct {
 	DB *gorm.DB
+}
+
+func (p *PostgresRepo) Transaction(callback func(repo Repository) error) error {
+	return p.DB.Transaction(func(tx *gorm.DB) error {
+		repo := PostgresRepo{
+			DB: tx,
+		}
+		return callback(&repo)
+	})
 }
 
 func (p *PostgresRepo) UpdateBalance(accountUUID uuid.UUID, balance uint) error {
