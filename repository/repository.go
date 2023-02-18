@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserRepository interface {
+type Repository interface {
 	CreateUser(user *models.User) error
 	GetUserByEmail(email string) (*models.User, error)
 	GetUserByUUID(uuid uuid.UUID) (*models.User, error)
@@ -192,7 +192,7 @@ func (p *PostgresRepo) CreateUser(user *models.User) error {
 	return nil
 }
 
-func NewGormUserRepo(DB *gorm.DB) UserRepository {
+func NewGormUserRepo(DB *gorm.DB) Repository {
 	return &PostgresRepo{
 		DB: DB,
 	}

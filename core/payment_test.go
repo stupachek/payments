@@ -484,7 +484,7 @@ func TestSendTransactionSuccess(t *testing.T) {
 	if _, err := system.SendTransaction(transaction.UUID); err != nil {
 		t.Errorf("send transaction err: %v", err)
 	}
-	tranc, err := system.UserRepo.GetTransactionByUUID(transactionsSource[0].UUID)
+	tranc, err := system.Repo.GetTransactionByUUID(transactionsSource[0].UUID)
 	if err != nil {
 		t.Errorf("get transaction error:  %v", err)
 	}

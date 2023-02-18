@@ -34,12 +34,12 @@ func GetEmail(token string) (string, bool) {
 }
 
 type PaymentSystem struct {
-	UserRepo repository.UserRepository
+	Repo repository.Repository
 }
 
-func NewPaymentSystem(userRepo repository.UserRepository) PaymentSystem {
+func NewPaymentSystem(userRepo repository.Repository) PaymentSystem {
 	return PaymentSystem{
-		UserRepo: userRepo,
+		Repo: userRepo,
 	}
 }
 
@@ -59,12 +59,12 @@ func (p *PaymentSystem) Register(user *models.User) error {
 	user.FisrtName = strings.TrimSpace(user.FisrtName)
 	user.LastName = strings.TrimSpace(user.LastName)
 	user.Email = strings.TrimSpace(user.Email)
-	err = p.UserRepo.CreateUser(user)
+	err = p.Repo.CreateUser(user)
 	return err
 }
 
 func (p *PaymentSystem) LoginCheck(email string, password string) (string, error) {
-	u, err := p.UserRepo.GetUserByEmail(email)
+	u, err := p.Repo.GetUserByEmail(email)
 	if err != nil {
 		return "", ErrUnauthenticated
 	}
@@ -92,7 +92,7 @@ func randToken(n int) (string, error) {
 }
 
 func (p *PaymentSystem) CheckToken(UUID uuid.UUID, token string) error {
-	user, err := p.UserRepo.GetUserByUUID(UUID)
+	user, err := p.Repo.GetUserByUUID(UUID)
 	if err != nil {
 		return ErrUnauthenticated
 	}
@@ -110,7 +110,7 @@ func (p *PaymentSystem) CheckToken(UUID uuid.UUID, token string) error {
 }
 
 func (p *PaymentSystem) NewAccount(userUUID uuid.UUID) (models.Account, error) {
-	user, err := p.UserRepo.GetUserByUUID(userUUID)
+	user, err := p.Repo.GetUserByUUID(userUUID)
 	if err != nil {
 		return models.Account{}, err
 	}
@@ -124,7 +124,7 @@ func (p *PaymentSystem) NewAccount(userUUID uuid.UUID) (models.Account, error) {
 	if err != nil {
 		return models.Account{}, err
 	}
-	err = p.UserRepo.CreateAccount(&account)
+	err = p.Repo.CreateAccount(&account)
 	if err != nil {
 		return models.Account{}, err
 	}
@@ -149,7 +149,7 @@ func (p *PaymentSystem) NewTransaction(tr Transaction) (models.Transaction, erro
 	if err != nil {
 		return models.Transaction{}, err
 	}
-	err = p.UserRepo.CreateTransaction(transaction)
+	err = p.Repo.CreateTransaction(transaction)
 	if err != nil {
 		return models.Transaction{}, err
 	}
@@ -157,7 +157,7 @@ func (p *PaymentSystem) NewTransaction(tr Transaction) (models.Transaction, erro
 }
 
 func (p *PaymentSystem) CheckAccountExists(userUUID, accountUUID uuid.UUID) error {
-	account, err := p.UserRepo.GetAccountByUUID(accountUUID)
+	account, err := p.Repo.GetAccountByUUID(accountUUID)
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func (p *PaymentSystem) CheckAccountExists(userUUID, accountUUID uuid.UUID) erro
 }
 
 func (p *PaymentSystem) checkAmount(accountUUID uuid.UUID, amount uint) error {
-	account, err := p.UserRepo.GetAccountByUUID(accountUUID)
+	account, err := p.Repo.GetAccountByUUID(accountUUID)
 	if err != nil {
 		return err
 	}
@@ -179,15 +179,15 @@ func (p *PaymentSystem) checkAmount(accountUUID uuid.UUID, amount uint) error {
 }
 
 func (p *PaymentSystem) GetAccounts(userUUID uuid.UUID) ([]models.Account, error) {
-	return p.UserRepo.GetAccountsForUser(userUUID)
+	return p.Repo.GetAccountsForUser(userUUID)
 }
 
 func (p *PaymentSystem) GetTransactions(accountUUID uuid.UUID) ([]models.Transaction, error) {
-	return p.UserRepo.GetTransactionForAccount(accountUUID)
+	return p.Repo.GetTransactionForAccount(accountUUID)
 }
 
 func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) (models.Transaction, error) {
-	transaction, err := p.UserRepo.GetTransactionByUUID(transactionUUID)
+	transaction, err := p.Repo.GetTransactionByUUID(transactionUUID)
 	if err != nil {
 		return models.Transaction{}, err
 	}
@@ -195,29 +195,29 @@ func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) (models.Trans
 	if err != nil {
 		return models.Transaction{}, err
 	}
-	sourse, err := p.UserRepo.GetAccountByUUID(transaction.SourceUUID)
+	sourse, err := p.Repo.GetAccountByUUID(transaction.SourceUUID)
 	if err != nil {
 		return models.Transaction{}, err
 	}
-	destination, err := p.UserRepo.GetAccountByUUID(transaction.DestinationUUID)
+	destination, err := p.Repo.GetAccountByUUID(transaction.DestinationUUID)
 	if err != nil {
 		return models.Transaction{}, err
 	}
 	sourceBalance := sourse.Balance - transaction.Amount
 	destinationBalance := destination.Balance + transaction.Amount
-	err = p.UserRepo.UpdateBalance(transaction.SourceUUID, sourceBalance)
+	err = p.Repo.UpdateBalance(transaction.SourceUUID, sourceBalance)
 	if err != nil {
 		return models.Transaction{}, err
 	}
-	err = p.UserRepo.UpdateBalance(transaction.DestinationUUID, destinationBalance)
+	err = p.Repo.UpdateBalance(transaction.DestinationUUID, destinationBalance)
 	if err != nil {
 		return models.Transaction{}, err
 	}
-	err = p.UserRepo.UpdateStatus(transactionUUID, StatusSent)
+	err = p.Repo.UpdateStatus(transactionUUID, StatusSent)
 	if err != nil {
 		return models.Transaction{}, err
 	}
-	tr, err := p.UserRepo.GetTransactionByUUID(transactionUUID)
+	tr, err := p.Repo.GetTransactionByUUID(transactionUUID)
 	if err != nil {
 		return models.Transaction{}, err
 	}
@@ -225,13 +225,13 @@ func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) (models.Trans
 }
 
 func (p *PaymentSystem) AddMoney(accountUUID uuid.UUID, amount uint) (models.Account, error) {
-	account, err := p.UserRepo.GetAccountByUUID(accountUUID)
+	account, err := p.Repo.GetAccountByUUID(accountUUID)
 	if err != nil {
 		return models.Account{}, err
 	}
 	balance := account.Balance + amount
-	p.UserRepo.UpdateBalance(accountUUID, balance)
-	account, err = p.UserRepo.GetAccountByUUID(accountUUID)
+	p.Repo.UpdateBalance(accountUUID, balance)
+	account, err = p.Repo.GetAccountByUUID(accountUUID)
 	if err != nil {
 		return models.Account{}, err
 	}
@@ -239,7 +239,7 @@ func (p *PaymentSystem) AddMoney(accountUUID uuid.UUID, amount uint) (models.Acc
 }
 
 func (p *PaymentSystem) ShowBalance(accountUUID uuid.UUID) (uint, error) {
-	account, err := p.UserRepo.GetAccountByUUID(accountUUID)
+	account, err := p.Repo.GetAccountByUUID(accountUUID)
 	if err != nil {
 		return 0, err
 	}
@@ -248,6 +248,6 @@ func (p *PaymentSystem) ShowBalance(accountUUID uuid.UUID) (uint, error) {
 }
 
 func (p *PaymentSystem) GetAccount(accountUUID uuid.UUID) (models.Account, error) {
-	account, err := p.UserRepo.GetAccountByUUID(accountUUID)
+	account, err := p.Repo.GetAccountByUUID(accountUUID)
 	return *account, err
 }
