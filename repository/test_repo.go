@@ -13,13 +13,13 @@ var ErrorUnknownAccount = errors.New("account does not exist")
 var ErrorUnknownTransaction = errors.New("transaction does not exist")
 
 type TestRepo struct {
-	Users       map[uuid.UUID]*models.User
-	Accounts    map[uuid.UUID]*models.Account
-	Transaction map[uuid.UUID]*models.Transaction
+	Users        map[uuid.UUID]*models.User
+	Accounts     map[uuid.UUID]*models.Account
+	Transactions map[uuid.UUID]*models.Transaction
 }
 
 func (t *TestRepo) UpdateStatus(transactionUUID uuid.UUID, status string) error {
-	transaction, ok := t.Transaction[transactionUUID]
+	transaction, ok := t.Transactions[transactionUUID]
 	if !ok {
 		return ErrorUnknownAccount
 	}
@@ -46,7 +46,7 @@ func (t *TestRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {
 
 func (t *TestRepo) GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error) {
 	transactions := make([]models.Transaction, 0)
-	for _, tr := range t.Transaction {
+	for _, tr := range t.Transactions {
 		if tr.SourceUUID == accountUUID || tr.DestinationUUID == accountUUID {
 			transactions = append(transactions, *tr)
 		}
@@ -54,16 +54,16 @@ func (t *TestRepo) GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Tra
 	return transactions, nil
 }
 func (t *TestRepo) GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error) {
-	transaction, ok := t.Transaction[transactionUUID]
+	transaction, ok := t.Transactions[transactionUUID]
 	if !ok {
 		return &models.Transaction{}, ErrorUnknownTransaction
 	}
 	return transaction, nil
 }
 func (t *TestRepo) CreateTransaction(transaction models.Transaction) error {
-	_, ok := t.Transaction[transaction.UUID]
+	_, ok := t.Transactions[transaction.UUID]
 	if !ok {
-		t.Transaction[transaction.UUID] = &transaction
+		t.Transactions[transaction.UUID] = &transaction
 		return nil
 	}
 	return ErrorCreated
@@ -74,9 +74,9 @@ func NewTestRepo() TestRepo {
 	accounts := make(map[uuid.UUID]*models.Account)
 	transaction := make(map[uuid.UUID]*models.Transaction)
 	return TestRepo{
-		Users:       users,
-		Accounts:    accounts,
-		Transaction: transaction,
+		Users:        users,
+		Accounts:     accounts,
+		Transactions: transaction,
 	}
 }
 
