@@ -1,6 +1,10 @@
 # payment
 
-## Run docker 
+Project "Payments"  is [final task](https://drive.google.com/file/d/1X7sKViRpL8t3XOlBElkG7pQvzpR0PjHn/view?usp=sharing) for EPAM Golang course.
+
+## Build and run 
 ```
-docker run --name p_db  -p 5432:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=qwerty -d postgres
+docker-compose up --build
 ```
+
+## The HTTP server runs on localhost:8080
