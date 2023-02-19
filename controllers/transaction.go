@@ -71,11 +71,15 @@ func (c *Controller) GetTransactions(ctx *gin.Context) {
 		return
 	}
 	query, err := query(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
+		return
+	}
 	sort_by := ctx.Query("sort_by")
 	sort_by = strings.ToLower(sort_by)
 	order := ctx.DefaultQuery("order", "asc")
 	order = strings.ToLower(order)
-	if sort_by != UUID {
+	if !(sort_by == UUID || sort_by == "") {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
 		return
 	}
