@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"net/http"
+	"payment/models"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -11,6 +13,16 @@ import (
 type AddMoneyInput struct {
 	Amount string `json:"amount" binding:"required"`
 }
+
+const (
+	UUID    = "uuid"
+	IBAN    = "iban"
+	BALANCE = "balance"
+	ASC     = "asc"
+	DESC    = "desc"
+)
+
+var UnknownQueryError = "unknown query"
 
 func (c *Controller) NewAccount(ctx *gin.Context) {
 	UUIDstr := ctx.Param("user_uuid")
@@ -28,6 +40,24 @@ func (c *Controller) NewAccount(ctx *gin.Context) {
 
 }
 
+func query(ctx *gin.Context) (models.QueryParams, error) {
+	limit, err := strconv.ParseUint(ctx.DefaultQuery("limit", "30"), 10, 32)
+	if err != nil {
+		return models.QueryParams{}, err
+	}
+	if limit > 30 {
+		limit = 30
+	}
+	offset, err := strconv.ParseUint(ctx.DefaultQuery("offset", "0"), 10, 32)
+	if err != nil {
+		return models.QueryParams{}, err
+	}
+	return models.QueryParams{
+		Limit:  uint(limit),
+		Offset: uint(offset),
+	}, nil
+}
+
 func (c *Controller) GetAccounts(ctx *gin.Context) {
 	UUIDstr := ctx.Param("user_uuid")
 	userUUID, err := uuid.Parse(UUIDstr)
@@ -35,7 +65,26 @@ func (c *Controller) GetAccounts(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	accounts, err := c.System.GetAccounts(userUUID)
+
+	query, err := query(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
+		return
+	}
+	sort_by := ctx.Query("sort_by")
+	sort_by = strings.ToLower(sort_by)
+	order := ctx.DefaultQuery("order", "asc")
+	order = strings.ToLower(order)
+	if !(sort_by == UUID || sort_by == IBAN || sort_by == BALANCE || sort_by == "") {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
+		return
+	}
+	if !(order == DESC || order == ASC) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
+		return
+	}
+	query.Sort = sort_by + " " + order
+	accounts, err := c.System.GetAccounts(userUUID, query)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

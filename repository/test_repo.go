@@ -57,7 +57,7 @@ func (t *TestRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error) {
 	return account, nil
 }
 
-func (t *TestRepo) GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error) {
+func (t *TestRepo) GetTransactionForAccount(accountUUID uuid.UUID, query models.QueryParams) ([]models.Transaction, error) {
 	transactions := make([]models.Transaction, 0)
 	for _, tr := range t.Transactions {
 		if tr.SourceUUID == accountUUID || tr.DestinationUUID == accountUUID {
@@ -93,7 +93,7 @@ func NewTestRepo() TestRepo {
 	}
 }
 
-func (t *TestRepo) GetAccountsForUser(userUUID uuid.UUID) ([]models.Account, error) {
+func (t *TestRepo) GetAccountsForUser(userUUID uuid.UUID, paganition models.QueryParams) ([]models.Account, error) {
 	accounts := make([]models.Account, 0)
 	for _, account := range t.Accounts {
 		if account.UserUUID == userUUID {

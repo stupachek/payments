@@ -242,7 +242,10 @@ func TestGetAccounts(t *testing.T) {
 	if _, err := system.NewAccount(bob.UUID); err != nil {
 		t.Errorf("create new account error: %v", err)
 	}
-	accs, err := system.GetAccounts(bob.UUID)
+	accs, err := system.GetAccounts(bob.UUID, models.QueryParams{
+		Limit:  30,
+		Offset: 0,
+	})
 	if err != nil {
 		t.Errorf("create new account error: %v", err)
 	}
@@ -334,11 +337,17 @@ func TestCreateTransactionSuccess(t *testing.T) {
 	if transaction.DestinationUUID != destination.UUID {
 		t.Errorf("diff destination uuid")
 	}
-	transactionsSource, err := system.GetTransactions(source.UUID)
+	transactionsSource, err := system.GetTransactions(source.UUID, models.QueryParams{
+		Limit:  30,
+		Offset: 0,
+	})
 	if err != nil {
 		t.Errorf("get transactions: %v", err)
 	}
-	transactionsDestination, err := system.GetTransactions(destination.UUID)
+	transactionsDestination, err := system.GetTransactions(destination.UUID, models.QueryParams{
+		Limit:  30,
+		Offset: 0,
+	})
 	if err != nil {
 		t.Errorf("get transactions: %v", err)
 	}
@@ -470,11 +479,17 @@ func TestSendTransactionSuccess(t *testing.T) {
 	if transaction.DestinationUUID != destination.UUID {
 		t.Errorf("diff destination uuid")
 	}
-	transactionsSource, err := system.GetTransactions(source.UUID)
+	transactionsSource, err := system.GetTransactions(source.UUID, models.QueryParams{
+		Limit:  30,
+		Offset: 0,
+	})
 	if err != nil {
 		t.Errorf("get transactions: %v", err)
 	}
-	transactionsDestination, err := system.GetTransactions(destination.UUID)
+	transactionsDestination, err := system.GetTransactions(destination.UUID, models.QueryParams{
+		Limit:  30,
+		Offset: 0,
+	})
 	if err != nil {
 		t.Errorf("get transactions: %v", err)
 	}
