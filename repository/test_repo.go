@@ -31,12 +31,21 @@ func (t *TestRepo) UpdateStatus(transactionUUID uuid.UUID, status string) error 
 	return nil
 }
 
-func (t *TestRepo) UpdateBalance(accountUUID uuid.UUID, balance uint) error {
+func (t *TestRepo) DecBalance(accountUUID uuid.UUID, amount uint) error {
 	account, ok := t.Accounts[accountUUID]
 	if !ok {
 		return ErrorUnknownAccount
 	}
-	account.Balance = balance
+	account.Balance = account.Balance - amount
+	return nil
+}
+
+func (t *TestRepo) IncBalance(accountUUID uuid.UUID, amount uint) error {
+	account, ok := t.Accounts[accountUUID]
+	if !ok {
+		return ErrorUnknownAccount
+	}
+	account.Balance = account.Balance + amount
 	return nil
 }
 

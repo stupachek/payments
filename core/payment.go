@@ -197,21 +197,11 @@ func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) (models.Trans
 			if err != nil {
 				return err
 			}
-			sourse, err := repo.GetAccountByUUID(transaction.SourceUUID)
+			err = repo.DecBalance(transaction.SourceUUID, transaction.Amount)
 			if err != nil {
 				return err
 			}
-			destination, err := repo.GetAccountByUUID(transaction.DestinationUUID)
-			if err != nil {
-				return err
-			}
-			sourceBalance := sourse.Balance - transaction.Amount
-			destinationBalance := destination.Balance + transaction.Amount
-			err = repo.UpdateBalance(transaction.SourceUUID, sourceBalance)
-			if err != nil {
-				return err
-			}
-			err = repo.UpdateBalance(transaction.DestinationUUID, destinationBalance)
+			err = repo.IncBalance(transaction.DestinationUUID, transaction.Amount)
 			if err != nil {
 				return err
 			}
@@ -229,13 +219,8 @@ func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) (models.Trans
 }
 
 func (p *PaymentSystem) AddMoney(accountUUID uuid.UUID, amount uint) (models.Account, error) {
+	p.Repo.IncBalance(accountUUID, amount)
 	account, err := p.Repo.GetAccountByUUID(accountUUID)
-	if err != nil {
-		return models.Account{}, err
-	}
-	balance := account.Balance + amount
-	p.Repo.UpdateBalance(accountUUID, balance)
-	account, err = p.Repo.GetAccountByUUID(accountUUID)
 	if err != nil {
 		return models.Account{}, err
 	}
