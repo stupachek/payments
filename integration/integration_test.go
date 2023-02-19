@@ -390,7 +390,7 @@ func TestPaymentIntegration(t *testing.T) {
 		account := reqResult["account"].(map[string]any)
 		money := account["balance"].(float64)
 		if money != 100 {
-			t.Fatalf("balance %v, exp: %v", money, 100)
+			t.Fatalf("balance %v, exp: %v", money, 50)
 		}
 		var wg sync.WaitGroup
 		wg.Add(100)
