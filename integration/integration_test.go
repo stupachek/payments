@@ -419,7 +419,7 @@ func TestPaymentIntegration(t *testing.T) {
 		wg.Wait()
 		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v", userUUID, destinationUUID)
 		reqResult = sendReq(t, "GET", url, nil, auth)
-		if balance := reqResult["balance"].(int); balance != 50 {
+		if balance := reqResult["balance"].(float64); balance != 50 {
 			t.Fatalf("wrong balance :%v, exp:%v", balance, 50)
 		}
 
