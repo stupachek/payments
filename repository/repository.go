@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserRepository interface {
+type Repository interface {
 	CreateUser(user *models.User) error
 	GetUserByEmail(email string) (*models.User, error)
 	GetUserByUUID(uuid uuid.UUID) (*models.User, error)
@@ -17,16 +17,31 @@ type UserRepository interface {
 	GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
 	GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error)
 	GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error)
-	UpdateBalance(accountUUID uuid.UUID, balance uint) error
+	IncBalance(accountUUID uuid.UUID, amount uint) error
+	DecBalance(accountUUID uuid.UUID, amount uint) error
 	UpdateStatus(transactionUUID uuid.UUID, status string) error
+	Transaction(callback func(repo Repository) error) error
 }
 
 type PostgresRepo struct {
 	DB *gorm.DB
 }
 
-func (p *PostgresRepo) UpdateBalance(accountUUID uuid.UUID, balance uint) error {
-	return p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Balance", balance).Error
+func (p *PostgresRepo) Transaction(callback func(repo Repository) error) error {
+	return p.DB.Transaction(func(tx *gorm.DB) error {
+		repo := PostgresRepo{
+			DB: tx,
+		}
+		return callback(&repo)
+	})
+}
+
+func (p *PostgresRepo) IncBalance(accountUUID uuid.UUID, amount uint) error {
+	return p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Balance", gorm.Expr("Balance + ?", amount)).Error
+}
+
+func (p *PostgresRepo) DecBalance(accountUUID uuid.UUID, amount uint) error {
+	return p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Balance", gorm.Expr("Balance - ?", amount)).Error
 }
 
 func (p *PostgresRepo) UpdateStatus(transactionUUID uuid.UUID, status string) error {
@@ -192,7 +207,7 @@ func (p *PostgresRepo) CreateUser(user *models.User) error {
 	return nil
 }
 
-func NewGormUserRepo(DB *gorm.DB) UserRepository {
+func NewGormUserRepo(DB *gorm.DB) Repository {
 	return &PostgresRepo{
 		DB: DB,
 	}
