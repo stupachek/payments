@@ -29,6 +29,24 @@ func (c *Controller) NewAccount(ctx *gin.Context) {
 
 }
 
+func query(ctx *gin.Context) (models.PaginationInput, error) {
+	limit, err := strconv.ParseUint(ctx.DefaultQuery("limit", "30"), 10, 32)
+	if err != nil {
+		return models.PaginationInput{}, err
+	}
+	if limit > 30 {
+		limit = 30
+	}
+	offset, err := strconv.ParseUint(ctx.DefaultQuery("offset", "0"), 10, 32)
+	if err != nil {
+		return models.PaginationInput{}, err
+	}
+	return models.PaginationInput{
+		Limit:  uint(limit),
+		Offset: uint(offset),
+	}, nil
+}
+
 func (c *Controller) GetAccounts(ctx *gin.Context) {
 	UUIDstr := ctx.Param("user_uuid")
 	userUUID, err := uuid.Parse(UUIDstr)
@@ -36,23 +54,8 @@ func (c *Controller) GetAccounts(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	limit, err := strconv.ParseUint(ctx.DefaultQuery("limit", "30"), 10, 32)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	if limit > 30 {
-		limit = 30
-	}
-	offset, err := strconv.ParseUint(ctx.DefaultQuery("offset", "0"), 10, 32)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	pagination := models.PaginationInput{
-		Limit:  uint(limit),
-		Offset: uint(offset),
-	}
+
+	pagination, err := query(ctx)
 
 	accounts, err := c.System.GetAccounts(userUUID, pagination)
 	if err != nil {
