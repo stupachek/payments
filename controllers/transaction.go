@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"payment/core"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -69,12 +70,25 @@ func (c *Controller) GetTransactions(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	pagination, err := query(ctx)
+	query, err := query(ctx)
+	sort_by := ctx.Query("sort_by")
+	sort_by = strings.ToLower(sort_by)
+	order := ctx.DefaultQuery("order", "asc")
+	order = strings.ToLower(order)
+	if sort_by != UUID {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
+		return
+	}
+	if !(order == DESC || order == ASC) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
+		return
+	}
+	query.Sort = sort_by + " " + order
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	transactions, err := c.System.GetTransactions(accountUUID, pagination)
+	transactions, err := c.System.GetTransactions(accountUUID, query)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
