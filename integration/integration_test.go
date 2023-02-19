@@ -424,6 +424,249 @@ func TestPaymentIntegration(t *testing.T) {
 		}
 
 	})
+	t.Run("queryAccountsSuccess", func(t *testing.T) {
+		input := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Williams",
+			Email:     "bob.www@qmail.com",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", input, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var userUUID string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", input, nil)
+		token, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		url := fmt.Sprintf("http://localhost:8080/users/%v/accounts/new", userUUID)
+		auth := make(map[string]string)
+		auth["Authorization"] = token
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts?sort_by=iban&orser=desc&limit=3&offset=1", userUUID)
+		reqResult = sendReq(t, "GET", url, nil, auth)
+		acc, ok := reqResult["accounts"].(map[string]string)
+		if !ok {
+			t.Fatal("get accounts error")
+		}
+		if len(acc) != 3 {
+			t.Fatalf("len: %v, exp: %v", len(acc), 3)
+		}
+
+	})
+	t.Run("queryAccountssuccessFailed", func(t *testing.T) {
+		input := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Stevens",
+			Email:     "bob.stevens@qmail.com",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", input, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var userUUID string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", input, nil)
+		token, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		url := fmt.Sprintf("http://localhost:8080/users/%v/accounts/new", userUUID)
+		auth := make(map[string]string)
+		auth["Authorization"] = token
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts?sort_by=qwerty&orser=desc&limit=3&offset=1", userUUID)
+		reqResult = sendReq(t, "GET", url, nil, auth)
+		err := reqResult["error"].(string)
+		if err != "unknown query" {
+			t.Fatalf("get accounts error: %v, exp: %v", err, "unknown query")
+		}
+
+	})
+	t.Run("queryTransactionsSucces", func(t *testing.T) {
+		input := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Fox",
+			Email:     "fox.fff@gmail.com",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", input, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var userUUID string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", input, nil)
+		token, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		url := fmt.Sprintf("http://localhost:8080/users/%v/accounts/new", userUUID)
+		auth := make(map[string]string)
+		auth["Authorization"] = token
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		sourceUUID := reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		destinationUUID := reqResult["uuid"].(string)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/add-money", userUUID, sourceUUID)
+		inputAddMoney := controllers.AddMoneyInput{
+			Amount: "60",
+		}
+		reqResult = sendReq(t, "POST", url, inputAddMoney, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("add money error")
+		}
+		account := reqResult["account"].(map[string]any)
+		money := account["balance"].(float64)
+		if money != 60 {
+			t.Fatalf("balance %v, exp: %v", money, 60)
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/new", userUUID, sourceUUID)
+		inputTr := controllers.TransactionInput{
+			DestinationUUID: destinationUUID,
+			Amount:          "1",
+		}
+		reqResult = sendReq(t, "POST", url, inputTr, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create transaction error")
+		}
+		reqResult = sendReq(t, "POST", url, inputTr, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create transaction error")
+		}
+		reqResult = sendReq(t, "POST", url, inputTr, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create transaction error")
+		}
+		reqResult = sendReq(t, "POST", url, inputTr, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create transaction error")
+		}
+		reqResult = sendReq(t, "POST", url, inputTr, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create transaction error")
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions?limit=4&offset=1&sorted_by=UUID", userUUID, sourceUUID)
+		reqResult = sendReq(t, "GET", url, nil, auth)
+		tr, ok := reqResult["transactions"].(map[string]string)
+		if !ok {
+			t.Fatal("get transaction error")
+		}
+		if len(tr) != 4 {
+			t.Fatalf("len: %v, exp: %v", len(tr), 3)
+		}
+
+	})
+	t.Run("queryTransactionsFailed", func(t *testing.T) {
+		input := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "West",
+			Email:     "bob.west123@gmail.com",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", input, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var userUUID string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", input, nil)
+		token, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		url := fmt.Sprintf("http://localhost:8080/users/%v/accounts/new", userUUID)
+		auth := make(map[string]string)
+		auth["Authorization"] = token
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		sourceUUID := reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		destinationUUID := reqResult["uuid"].(string)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/add-money", userUUID, sourceUUID)
+		inputAddMoney := controllers.AddMoneyInput{
+			Amount: "60",
+		}
+		reqResult = sendReq(t, "POST", url, inputAddMoney, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("add money error")
+		}
+		account := reqResult["account"].(map[string]any)
+		money := account["balance"].(float64)
+		if money != 60 {
+			t.Fatalf("balance %v, exp: %v", money, 60)
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/new", userUUID, sourceUUID)
+		inputTr := controllers.TransactionInput{
+			DestinationUUID: destinationUUID,
+			Amount:          "1",
+		}
+		reqResult = sendReq(t, "POST", url, inputTr, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create transaction error")
+		}
+		reqResult = sendReq(t, "POST", url, inputTr, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create transaction error")
+		}
+		reqResult = sendReq(t, "POST", url, inputTr, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create transaction error")
+		}
+		reqResult = sendReq(t, "POST", url, inputTr, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create transaction error")
+		}
+		reqResult = sendReq(t, "POST", url, inputTr, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create transaction error")
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions?limit=qwerty", userUUID, sourceUUID)
+		reqResult = sendReq(t, "GET", url, nil, auth)
+		err := reqResult["error"].(string)
+		if err != "unknown query" {
+			t.Fatalf("get accounts error: %v, exp: %v", err, "unknown query")
+		}
+
+	})
 }
 
 func sendReq(t *testing.T, method string, url string, inputT interface{}, headers map[string]string) map[string]any {
