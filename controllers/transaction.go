@@ -10,6 +10,11 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	CREATED = "created_at"
+	UPDATED = "updated_at"
+)
+
 type TransactionInput struct {
 	DestinationUUID string `json:"destination_uuid" binding:"required"`
 	Amount          string `json:"amount" binding:"required"`
@@ -75,11 +80,12 @@ func (c *Controller) GetTransactions(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
 		return
 	}
-	sort_by := ctx.Query("sort_by")
+	sort_by := ctx.DefaultQuery("sort_by", "uuid")
 	sort_by = strings.ToLower(sort_by)
 	order := ctx.DefaultQuery("order", "asc")
 	order = strings.ToLower(order)
-	if !(sort_by == UUID || sort_by == "") {
+
+	if !(sort_by == UUID || sort_by == CREATED || sort_by == UPDATED) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
 		return
 	}

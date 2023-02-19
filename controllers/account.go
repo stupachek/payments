@@ -71,11 +71,11 @@ func (c *Controller) GetAccounts(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
 		return
 	}
-	sort_by := ctx.Query("sort_by")
+	sort_by := ctx.DefaultQuery("sort_by", "uuid")
 	sort_by = strings.ToLower(sort_by)
 	order := ctx.DefaultQuery("order", "asc")
 	order = strings.ToLower(order)
-	if !(sort_by == UUID || sort_by == IBAN || sort_by == BALANCE || sort_by == "") {
+	if !(sort_by == UUID || sort_by == IBAN || sort_by == BALANCE) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
 		return
 	}
