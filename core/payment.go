@@ -189,7 +189,7 @@ func (p *PaymentSystem) GetTransactions(accountUUID uuid.UUID) ([]models.Transac
 func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) (models.Transaction, error) {
 	err := p.Repo.Transaction(
 		func(repo repository.Repository) error {
-			transaction, err := p.Repo.GetTransactionByUUID(transactionUUID)
+			transaction, err := repo.GetTransactionByUUID(transactionUUID)
 			if err != nil {
 				return err
 			}
@@ -197,25 +197,25 @@ func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) (models.Trans
 			if err != nil {
 				return err
 			}
-			sourse, err := p.Repo.GetAccountByUUID(transaction.SourceUUID)
+			sourse, err := repo.GetAccountByUUID(transaction.SourceUUID)
 			if err != nil {
 				return err
 			}
-			destination, err := p.Repo.GetAccountByUUID(transaction.DestinationUUID)
+			destination, err := repo.GetAccountByUUID(transaction.DestinationUUID)
 			if err != nil {
 				return err
 			}
 			sourceBalance := sourse.Balance - transaction.Amount
 			destinationBalance := destination.Balance + transaction.Amount
-			err = p.Repo.UpdateBalance(transaction.SourceUUID, sourceBalance)
+			err = repo.UpdateBalance(transaction.SourceUUID, sourceBalance)
 			if err != nil {
 				return err
 			}
-			err = p.Repo.UpdateBalance(transaction.DestinationUUID, destinationBalance)
+			err = repo.UpdateBalance(transaction.DestinationUUID, destinationBalance)
 			if err != nil {
 				return err
 			}
-			err = p.Repo.UpdateStatus(transactionUUID, StatusSent)
+			err = repo.UpdateStatus(transactionUUID, StatusSent)
 			return err
 		})
 	if err != nil {
