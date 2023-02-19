@@ -13,9 +13,9 @@ type Repository interface {
 	GetUserByUUID(uuid uuid.UUID) (*models.User, error)
 	CreateAccount(account *models.Account) error
 	CreateTransaction(transaction models.Transaction) error
-	GetAccountsForUser(userUUID uuid.UUID, pagination models.QueryParams) ([]models.Account, error)
+	GetAccountsForUser(userUUID uuid.UUID, query models.QueryParams) ([]models.Account, error)
 	GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
-	GetTransactionForAccount(accountUUID uuid.UUID, pagination models.QueryParams) ([]models.Transaction, error)
+	GetTransactionForAccount(accountUUID uuid.UUID, query models.QueryParams) ([]models.Transaction, error)
 	GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error)
 	IncBalance(accountUUID uuid.UUID, amount uint) error
 	DecBalance(accountUUID uuid.UUID, amount uint) error
@@ -79,9 +79,9 @@ func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {
 	return nil
 }
 
-func (p *PostgresRepo) GetTransactionForAccount(accountUUID uuid.UUID, pagination models.QueryParams) ([]models.Transaction, error) {
+func (p *PostgresRepo) GetTransactionForAccount(accountUUID uuid.UUID, query models.QueryParams) ([]models.Transaction, error) {
 	var gormTransaction []GormTransaction
-	result := p.DB.Model(GormTransaction{}).Where("Source_UUID = ? OR Destination_UUID = ?", accountUUID, accountUUID).Limit(int(pagination.Limit)).Offset(int(pagination.Offset)).Find(&gormTransaction)
+	result := p.DB.Model(GormTransaction{}).Where("Source_UUID = ? OR Destination_UUID = ?", accountUUID, accountUUID).Limit(int(query.Limit)).Offset(int(query.Offset)).Find(&gormTransaction)
 	if result.Error != nil {
 		return []models.Transaction{}, result.Error
 	}
@@ -117,9 +117,9 @@ func (p *PostgresRepo) fromGormToModelTransaction(transactions []GormTransaction
 	return modelTransaction
 }
 
-func (p *PostgresRepo) GetAccountsForUser(userUUID uuid.UUID, pagination models.QueryParams) ([]models.Account, error) {
+func (p *PostgresRepo) GetAccountsForUser(userUUID uuid.UUID, query models.QueryParams) ([]models.Account, error) {
 	var gormAccounts []GormAccount
-	result := p.DB.Model(GormAccount{}).Where("User_UUID = ?", userUUID).Limit(int(pagination.Limit)).Offset(int(pagination.Offset)).Find(&gormAccounts)
+	result := p.DB.Model(GormAccount{}).Where("User_UUID = ?", userUUID).Limit(int(query.Limit)).Offset(int(query.Offset)).Find(&gormAccounts)
 	if err := result.Error; err != nil {
 		return []models.Account{}, err
 	}
