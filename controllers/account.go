@@ -29,19 +29,19 @@ func (c *Controller) NewAccount(ctx *gin.Context) {
 
 }
 
-func query(ctx *gin.Context) (models.PaginationInput, error) {
+func query(ctx *gin.Context) (models.QueryParams, error) {
 	limit, err := strconv.ParseUint(ctx.DefaultQuery("limit", "30"), 10, 32)
 	if err != nil {
-		return models.PaginationInput{}, err
+		return models.QueryParams{}, err
 	}
 	if limit > 30 {
 		limit = 30
 	}
 	offset, err := strconv.ParseUint(ctx.DefaultQuery("offset", "0"), 10, 32)
 	if err != nil {
-		return models.PaginationInput{}, err
+		return models.QueryParams{}, err
 	}
-	return models.PaginationInput{
+	return models.QueryParams{
 		Limit:  uint(limit),
 		Offset: uint(offset),
 	}, nil

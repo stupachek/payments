@@ -11,7 +11,7 @@ type Account struct {
 	UserUUID uuid.UUID `json:"user_uuid"`
 }
 
-type PaginationInput struct {
+type QueryParams struct {
 	Limit  uint `json:"limit"`
 	Offset uint `json:"offset"`
 }
