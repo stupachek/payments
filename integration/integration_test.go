@@ -9,6 +9,7 @@ import (
 	"payment/controllers"
 	"payment/core"
 	"payment/repository"
+	"sync"
 	"testing"
 	"time"
 
@@ -345,6 +346,81 @@ func TestPaymentIntegration(t *testing.T) {
 		reqResult = sendReq(t, "GET", url, nil, auth)
 		if balance := reqResult["balance"].(float64); balance != 70 {
 			t.Fatalf("wrong balance :%v, exp:%v", balance, 70)
+		}
+
+	})
+	t.Run("transaction", func(t *testing.T) {
+		input := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Lobster",
+			Email:     "lobster@i.ua",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", input, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var userUUID string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", input, nil)
+		token, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		url := fmt.Sprintf("http://localhost:8080/users/%v/accounts/new", userUUID)
+		auth := make(map[string]string)
+		auth["Authorization"] = token
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		sourceUUID := reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		destinationUUID := reqResult["uuid"].(string)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/add-money", userUUID, sourceUUID)
+		inputAddMoney := controllers.AddMoneyInput{
+			Amount: "100",
+		}
+		reqResult = sendReq(t, "POST", url, inputAddMoney, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("add money error")
+		}
+		account := reqResult["account"].(map[string]any)
+		money := account["balance"].(float64)
+		if money != 100 {
+			t.Fatalf("balance %v, exp: %v", money, 100)
+		}
+		var wg sync.WaitGroup
+		wg.Add(100)
+		for i := 0; i < 100; i++ {
+			go func() {
+				defer wg.Done()
+				url := fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/new", userUUID, sourceUUID)
+				inputTr := controllers.TransactionInput{
+					DestinationUUID: destinationUUID,
+					Amount:          "1",
+				}
+				reqResult := sendReq(t, "POST", url, inputTr, auth)
+				if _, ok := reqResult["message"]; !ok {
+					log.Fatal("create transaction error")
+				}
+				trans := reqResult["transaction"].(map[string]any)
+				transUUID := trans["uuid"].(string)
+				url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/%v/send", userUUID, sourceUUID, transUUID)
+				reqResult = sendReq(t, "POST", url, nil, auth)
+				if _, ok := reqResult["message"]; !ok {
+					log.Fatal("send transaction error")
+				}
+
+			}()
+		}
+		wg.Wait()
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v", userUUID, destinationUUID)
+		reqResult = sendReq(t, "GET", url, nil, auth)
+		if balance := reqResult["balance"].(float64); balance != 100 {
+			t.Fatalf("wrong balance :%v, exp:%v", balance, 100)
 		}
 
 	})
