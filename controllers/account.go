@@ -17,7 +17,7 @@ type AddMoneyInput struct {
 const (
 	UUID    = "uuid"
 	IBAN    = "iban"
-	Balance = "balance"
+	BALANCE = "balance"
 	ASC     = "asc"
 	DESC    = "desc"
 )
@@ -75,7 +75,7 @@ func (c *Controller) GetAccounts(ctx *gin.Context) {
 	sort_by = strings.ToLower(sort_by)
 	order := ctx.DefaultQuery("order", "asc")
 	order = strings.ToLower(order)
-	if !(sort_by == UUID || sort_by == IBAN || sort_by == Balance || sort_by == "") {
+	if !(sort_by == UUID || sort_by == IBAN || sort_by == BALANCE || sort_by == "") {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
 		return
 	}
