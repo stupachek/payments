@@ -466,7 +466,7 @@ func TestPaymentIntegration(t *testing.T) {
 		}
 		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts?sort_by=iban&orser=desc&limit=3&offset=1", userUUID)
 		reqResult = sendReq(t, "GET", url, nil, auth)
-		acc, ok := reqResult["accounts"].(map[string]string)
+		acc, ok := reqResult["accounts"].([]any)
 		if !ok {
 			t.Fatal("get accounts error")
 		}
@@ -580,9 +580,9 @@ func TestPaymentIntegration(t *testing.T) {
 		if _, ok := reqResult["message"]; !ok {
 			t.Fatal("create transaction error")
 		}
-		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions?limit=4&offset=1&sorted_by=UUID", userUUID, sourceUUID)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions?limit=4&offset=1&sort_by=uuid", userUUID, sourceUUID)
 		reqResult = sendReq(t, "GET", url, nil, auth)
-		tr, ok := reqResult["transactions"].(map[string]string)
+		tr, ok := reqResult["transactions"].([]any)
 		if !ok {
 			t.Fatal("get transaction error")
 		}
