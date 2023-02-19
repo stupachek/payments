@@ -41,6 +41,9 @@ func (c *Controller) GetAccounts(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if limit > 30 {
+		limit = 30
+	}
 	offset, err := strconv.ParseUint(ctx.DefaultQuery("offset", "0"), 10, 32)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
