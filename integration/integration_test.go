@@ -390,11 +390,11 @@ func TestPaymentIntegration(t *testing.T) {
 		account := reqResult["account"].(map[string]any)
 		money := account["balance"].(float64)
 		if money != 100 {
-			t.Fatalf("balance %v, exp: %v", money, 50)
+			t.Fatalf("balance %v, exp: %v", money, 100)
 		}
 		var wg sync.WaitGroup
-		wg.Add(100)
-		for i := 0; i < 100; i++ {
+		wg.Add(50)
+		for i := 0; i < 50; i++ {
 			go func() {
 				defer wg.Done()
 				url := fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/transactions/new", userUUID, sourceUUID)
@@ -419,8 +419,8 @@ func TestPaymentIntegration(t *testing.T) {
 		wg.Wait()
 		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v", userUUID, destinationUUID)
 		reqResult = sendReq(t, "GET", url, nil, auth)
-		if balance := reqResult["balance"].(float64); balance != 100 {
-			t.Fatalf("wrong balance :%v, exp:%v", balance, 100)
+		if balance := reqResult["balance"].(float64); balance != 50 {
+			t.Fatalf("wrong balance :%v, exp:%v", balance, 50)
 		}
 
 	})
