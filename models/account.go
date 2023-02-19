@@ -10,3 +10,8 @@ type Account struct {
 	Balance  uint      `json:"balance"`
 	UserUUID uuid.UUID `json:"user_uuid"`
 }
+
+type PaginationInput struct {
+	Limit  uint `json:"limit"`
+	Offset uint `json:"offset"`
+}

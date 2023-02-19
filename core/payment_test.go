@@ -242,7 +242,10 @@ func TestGetAccounts(t *testing.T) {
 	if _, err := system.NewAccount(bob.UUID); err != nil {
 		t.Errorf("create new account error: %v", err)
 	}
-	accs, err := system.GetAccounts(bob.UUID)
+	accs, err := system.GetAccounts(bob.UUID, models.PaginationInput{
+		Limit:  30,
+		Offset: 0,
+	})
 	if err != nil {
 		t.Errorf("create new account error: %v", err)
 	}

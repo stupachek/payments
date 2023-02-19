@@ -178,8 +178,8 @@ func (p *PaymentSystem) checkAmount(accountUUID uuid.UUID, amount uint) error {
 	return ErrInsufficientFunds
 }
 
-func (p *PaymentSystem) GetAccounts(userUUID uuid.UUID) ([]models.Account, error) {
-	return p.Repo.GetAccountsForUser(userUUID)
+func (p *PaymentSystem) GetAccounts(userUUID uuid.UUID, pagination models.PaginationInput) ([]models.Account, error) {
+	return p.Repo.GetAccountsForUser(userUUID, pagination)
 }
 
 func (p *PaymentSystem) GetTransactions(accountUUID uuid.UUID) ([]models.Transaction, error) {

@@ -13,7 +13,7 @@ type Repository interface {
 	GetUserByUUID(uuid uuid.UUID) (*models.User, error)
 	CreateAccount(account *models.Account) error
 	CreateTransaction(transaction models.Transaction) error
-	GetAccountsForUser(userUUID uuid.UUID) ([]models.Account, error)
+	GetAccountsForUser(userUUID uuid.UUID, pagination models.PaginationInput) ([]models.Account, error)
 	GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
 	GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error)
 	GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error)
@@ -117,9 +117,9 @@ func (p *PostgresRepo) fromGormToModelTransaction(transactions []GormTransaction
 	return modelTransaction
 }
 
-func (p *PostgresRepo) GetAccountsForUser(userUUID uuid.UUID) ([]models.Account, error) {
+func (p *PostgresRepo) GetAccountsForUser(userUUID uuid.UUID, pagination models.PaginationInput) ([]models.Account, error) {
 	var gormAccounts []GormAccount
-	result := p.DB.Model(GormAccount{}).Where("User_UUID = ?", userUUID).Find(&gormAccounts)
+	result := p.DB.Model(GormAccount{}).Where("User_UUID = ?", userUUID).Limit(int(pagination.Limit)).Offset(int(pagination.Offset)).Find(&gormAccounts)
 	if err := result.Error; err != nil {
 		return []models.Account{}, err
 	}

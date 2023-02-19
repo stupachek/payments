@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"payment/models"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -35,7 +36,22 @@ func (c *Controller) GetAccounts(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	accounts, err := c.System.GetAccounts(userUUID)
+	limit, err := strconv.ParseUint(ctx.DefaultQuery("limit", "30"), 10, 32)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	offset, err := strconv.ParseUint(ctx.DefaultQuery("offset", "0"), 10, 32)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	pagination := models.PaginationInput{
+		Limit:  uint(limit),
+		Offset: uint(offset),
+	}
+
+	accounts, err := c.System.GetAccounts(userUUID, pagination)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
