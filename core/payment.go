@@ -182,8 +182,8 @@ func (p *PaymentSystem) GetAccounts(userUUID uuid.UUID, pagination models.Pagina
 	return p.Repo.GetAccountsForUser(userUUID, pagination)
 }
 
-func (p *PaymentSystem) GetTransactions(accountUUID uuid.UUID) ([]models.Transaction, error) {
-	return p.Repo.GetTransactionForAccount(accountUUID)
+func (p *PaymentSystem) GetTransactions(accountUUID uuid.UUID, pagination models.PaginationInput) ([]models.Transaction, error) {
+	return p.Repo.GetTransactionForAccount(accountUUID, pagination)
 }
 
 func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) (models.Transaction, error) {

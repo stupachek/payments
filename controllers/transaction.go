@@ -69,7 +69,12 @@ func (c *Controller) GetTransactions(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	transactions, err := c.System.GetTransactions(accountUUID)
+	pagination, err := query(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	transactions, err := c.System.GetTransactions(accountUUID, pagination)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

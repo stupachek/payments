@@ -15,7 +15,7 @@ type Repository interface {
 	CreateTransaction(transaction models.Transaction) error
 	GetAccountsForUser(userUUID uuid.UUID, pagination models.PaginationInput) ([]models.Account, error)
 	GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
-	GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error)
+	GetTransactionForAccount(accountUUID uuid.UUID, pagination models.PaginationInput) ([]models.Transaction, error)
 	GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error)
 	IncBalance(accountUUID uuid.UUID, amount uint) error
 	DecBalance(accountUUID uuid.UUID, amount uint) error
@@ -79,9 +79,9 @@ func (p *PostgresRepo) CreateTransaction(transaction models.Transaction) error {
 	return nil
 }
 
-func (p *PostgresRepo) GetTransactionForAccount(accountUUID uuid.UUID) ([]models.Transaction, error) {
+func (p *PostgresRepo) GetTransactionForAccount(accountUUID uuid.UUID, pagination models.PaginationInput) ([]models.Transaction, error) {
 	var gormTransaction []GormTransaction
-	result := p.DB.Model(GormTransaction{}).Where("Source_UUID = ? OR Destination_UUID = ?", accountUUID, accountUUID).Find(&gormTransaction)
+	result := p.DB.Model(GormTransaction{}).Where("Source_UUID = ? OR Destination_UUID = ?", accountUUID, accountUUID).Limit(int(pagination.Limit)).Offset(int(pagination.Offset)).Find(&gormTransaction)
 	if result.Error != nil {
 		return []models.Transaction{}, result.Error
 	}
