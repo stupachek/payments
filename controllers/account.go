@@ -55,9 +55,13 @@ func (c *Controller) GetAccounts(ctx *gin.Context) {
 		return
 	}
 
-	pagination, err := query(ctx)
+	query, err := query(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-	accounts, err := c.System.GetAccounts(userUUID, pagination)
+	accounts, err := c.System.GetAccounts(userUUID, query)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
