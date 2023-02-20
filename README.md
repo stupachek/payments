@@ -10,17 +10,19 @@ docker-compose up --build
 The HTTP server runs on localhost:8080
 
 ## Endpoints 
->Each method expects an body with JSON value.
+Each method expects an body with JSON value.
 ### USERS
 
-#### POST /users/register
+#### POST `/users/register`
 
 reqiures *first_name*, *last_name*, unique *email*, *password*;
 returns user's uuid;
 ##### example req
-``` POST http://localhost:8080/users/register```
+
+`POST http://localhost:8080/users/register`
+
 Body 
-```
+```json
 {   
     "firstName": "Bob",
     "lastName": "Fox",
@@ -29,6 +31,7 @@ Body
 }
 ```
 ##### res
+
 Body
 ```
 {
@@ -37,27 +40,31 @@ Body
 }
 ```
 
-#### POST /users/login
+#### POST `/users/login`
 
 reqiures *email*, *password*;
 returns authorization token;
 ##### example req
-``` POST http://localhost:8080/users/login```
+
+`POST http://localhost:8080/users/login`
+
 Body 
-```
+```json
 {  
     "email": "bob.fffox1987@gmail.com",
     "password":"qwerty"
 }
 ```
 ##### res
+
 Body
-```
+```json
 {
     "token": "1502fc251eec30608bd558c862cb7f03a129cff539e84f322f59ac6f1f846cb7"
 }
 ```
 >Other endpoints require the Authorization header with the token inside.
+
 Header
 ```
     key:Authorization
@@ -65,29 +72,35 @@ Header
 ```
 ### ACCOUNTS
 
-#### POST /users/{user_uuid}/accounts/new
+#### POST `/users/{user_uuid}/accounts/new`
 creates new account for user;
 returns account's uuid;
 ##### example req
-``` POST http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts/new```
+
+`POST http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts/new`
+
 ##### res
+
 Body
-```
+```json
 {
     "message": "new account add",
     "uuid": "b89f5687-9cd6-4275-b3d2-87fd7bd8d011"
 }
 ```
 
-#### GET /users/{user_uuid}/accounts
+#### GET `/users/{user_uuid}/accounts`
 
 returns accounts for user; 
 > URL could contain such query parameters as *offset*, *limit*, *sort_by*(expects *uuid*, *iban* or *balance*), *order*(expects *asc* or *desc*)
 ##### example req
-``` GET http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts?sort_by=uuid&order=desc&limit=3```
+
+`GET http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts?sort_by=uuid&order=desc&limit=3`
+
 ##### res
+
 Body
-```
+```json
 {
     "accounts": [
         {
@@ -112,14 +125,17 @@ Body
 }
 ```
 
-#### GET /users/{user_uuid}/accounts/{accounts_uuid}
+#### GET `/users/{user_uuid}/accounts/{accounts_uuid}`
 
 returns the account; 
 ##### example req
-``` GET http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts/db689093-81ca-4092-bdc2-52988d5ea970```
+
+`GET http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts/db689093-81ca-4092-bdc2-52988d5ea970`
+
 ##### res
+
 Body
-```
+```json
 {
     "balance": 0,
     "iban": "1dbfc0e2df7c3edc2ea3118f0d824ecddf29cc95452b0739b05db53d3c",
@@ -127,21 +143,24 @@ Body
 }
 ```
 
-#### POST /users/{user_uuid}/accounts/{accounts_uuid}/add-money
+#### POST `/users/{user_uuid}/accounts/{accounts_uuid}/add-money`
 
 requires *amount*;
 adds amount to account's balance;
 returns the account; 
 ##### example req
-``` POST http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts/fbe8bee3-1cb7-4d90-8388-105297522a86/add-money```
-```
+
+`POST http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts/fbe8bee3-1cb7-4d90-8388-105297522a86/add-money`
+
+``` json
 {  
     "amount" : "123"
 }
 ```
+
 ##### res
 Body
-```
+``` json
 {
     "account": {
         "uuid": "fbe8bee3-1cb7-4d90-8388-105297522a86",
@@ -154,22 +173,26 @@ Body
 ```
 ### TRANSACTION
 
-#### POST /users/{user_uuid}/accounts/{accounts_uuid}/transactions/new
+#### POST `/users/{user_uuid}/accounts/{accounts_uuid}/transactions/new`
 
 requires *destination_uuid*, *amount*;
 creates new transaction with status "prepared";
 returns transaction;
 ##### example req
-``` POST http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts/fbe8bee3-1cb7-4d90-8388-105297522a86/transactions/new```
-```
+
+`POST http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts/fbe8bee3-1cb7-4d90-8388-105297522a86/transactions/new`
+
+```json
 {  
     "destination_uuid" : "db689093-81ca-4092-bdc2-52988d5ea970",
     "amount": "30"
 }
 ```
+
 ##### res
+
 Body
-```
+``` json
 {
     "message": "create new transaction",
     "transaction": {
@@ -184,15 +207,18 @@ Body
 }
 ```
 
-#### POST /users/{user_uuid}/accounts/{accounts_uuid}/transactions/{transaction_uuid}/send
+#### POST `/users/{user_uuid}/accounts/{accounts_uuid}/transactions/{transaction_uuid}/send`
 
 sends the transaction, updates accounts' balances and transaction status ("sent");
 returns transaction;
 ##### example req
-``` POST http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts/fbe8bee3-1cb7-4d90-8388-105297522a86/transactions/d8882d3c-2d44-4312-ac10-020f45ea4c43/send```
+
+`POST http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts/fbe8bee3-1cb7-4d90-8388-105297522a86/transactions/d8882d3c-2d44-4312-ac10-020f45ea4c43/send`
+
 ##### res
+
 Body
-```
+```json
 {
     "message": "sent transaction",
     "transaction": {
@@ -207,15 +233,18 @@ Body
 }
 ```
 
-#### GET /users/{user_uuid}/accounts/{accounts_uuid}/transactions
+#### GET `/users/{user_uuid}/accounts/{accounts_uuid}/transactions`
 
 returns transactions; 
 > URL could contain such query parameters as *offset*, *limit*, *sort_by*(expects *uuid*, *created_at* or *updated_at*), *order*(expects *asc* or *desc*)
 ##### example req
-``` GET http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts/fbe8bee3-1cb7-4d90-8388-105297522a86/transactions?sort_by=created_at```
+
+`GET http://localhost:8080/users/b77499e2-ed74-4214-9fd0-86be3456843b/accounts/fbe8bee3-1cb7-4d90-8388-105297522a86/transactions?sort_by=created_at`
+
 ##### res
+
 Body
-```
+```json
 {
     "transactions": [
         {
