@@ -153,7 +153,11 @@ func (p *PaymentSystem) NewTransaction(tr Transaction) (models.Transaction, erro
 	if err != nil {
 		return models.Transaction{}, err
 	}
-	return transaction, nil
+	transactionModel, err := p.Repo.GetTransactionByUUID(transaction.UUID)
+	if err != nil {
+		return models.Transaction{}, err
+	}
+	return *transactionModel, nil
 }
 
 func (p *PaymentSystem) CheckAccountExists(userUUID, accountUUID uuid.UUID) error {
