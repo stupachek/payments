@@ -65,6 +65,7 @@ returns transactions;
 > URL could contain such query parameters as *offset*, *limit*, *sort_by*(expects *uuid*, *created_at* or *updated_at*), *order*(expects *asc* or *desc*)
 
 ### Request and Response Examples
+#### Register
 ##### req
 ```
 POST /users/register
@@ -84,6 +85,25 @@ Body
 {
     "message": "registration success",
     "uuid": "b77499e2-ed74-4214-9fd0-86be3456843b"
+}
+```
+#### Wrong password
+##### req
+```
+POST /users/login
+```
+Body 
+```
+{  
+    "email": "bob.fffox1987@gmail.com",
+    "password":"qwerty123"
+}
+```
+##### res
+Body
+```
+{
+    "error": "unauthenticated"
 }
 ```
 
