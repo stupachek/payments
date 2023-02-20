@@ -60,6 +60,8 @@ func (p *PostgresRepo) GetTransactionByUUID(transactionUUID uuid.UUID) (*models.
 		SourceUUID:      gormTransaction.SourceUUID,
 		DestinationUUID: gormTransaction.DestinationUUID,
 		Amount:          gormTransaction.Amount,
+		CreatedAt:       gormTransaction.CreatedAt,
+		UpdatedAt:       gormTransaction.UpdatedAt,
 	}
 	return &transaction, nil
 }
@@ -112,6 +114,8 @@ func (p *PostgresRepo) fromGormToModelTransaction(transactions []GormTransaction
 			SourceUUID:      tr.SourceUUID,
 			DestinationUUID: tr.DestinationUUID,
 			Amount:          tr.Amount,
+			CreatedAt:       tr.CreatedAt,
+			UpdatedAt:       tr.UpdatedAt,
 		}
 	}
 	return modelTransaction

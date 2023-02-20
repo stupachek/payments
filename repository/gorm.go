@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/driver/postgres"
@@ -34,6 +35,8 @@ type GormTransaction struct {
 	SourceUUID      uuid.UUID `gorm:"type:uuid;not null"`
 	DestinationUUID uuid.UUID `gorm:"type:uuid;not null"`
 	Amount          uint      `gorm:"not null"`
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 func ConnectDataBase() *gorm.DB {
