@@ -9,8 +9,8 @@ docker-compose up --build
 ## Usage
 The HTTP server runs on localhost:8080
 
-##Endpoints 
-####users
+## Endpoints 
+#### users
 ```
 * POST /users/register
 ```
