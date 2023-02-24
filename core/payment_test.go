@@ -87,6 +87,12 @@ func TestLogin(t *testing.T) {
 			password: "alice",
 			expErr:   ErrUnauthenticated,
 		},
+		{
+			name:     "admin",
+			email:    "admin@admin.admin",
+			password: "admin",
+			expErr:   nil,
+		},
 	}
 	testRepo := repository.NewTestRepo()
 	system := NewPaymentSystem(&testRepo)
