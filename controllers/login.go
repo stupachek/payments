@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	_ "payment/core"
 	"payment/models"
 
 	"github.com/gin-gonic/gin"
@@ -22,11 +23,11 @@ func (c *Controller) Login(ctx *gin.Context) {
 		Email:    input.Email,
 		Password: input.Password,
 	}
-	token, err := c.System.LoginCheck(u.Email, u.Password)
+	out, err := c.System.LoginCheck(u.Email, u.Password)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"token": token})
+	ctx.JSON(http.StatusOK, gin.H{"uuid": out.UUID, "token": out.Token})
 
 }
