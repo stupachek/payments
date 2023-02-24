@@ -37,6 +37,7 @@ func (c *Controller) Register(ctx *gin.Context) {
 		LastName:  input.LastName,
 		Email:     input.Email,
 		Password:  input.Password,
+		Role:      core.USER,
 	}
 	err := c.System.Register(&user)
 	if err != nil {

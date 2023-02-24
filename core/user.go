@@ -4,10 +4,12 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"os"
 	"payment/models"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"github.com/matthewhartstonge/argon2"
 )
 
@@ -38,7 +40,6 @@ func (p *PaymentSystem) Register(user *models.User) error {
 	user.FisrtName = strings.TrimSpace(user.FisrtName)
 	user.LastName = strings.TrimSpace(user.LastName)
 	user.Email = strings.TrimSpace(user.Email)
-	user.Role = USER
 	err = p.Repo.CreateUser(user)
 	return err
 }
@@ -106,4 +107,22 @@ func (p *PaymentSystem) checkAdmin(UUID uuid.UUID) error {
 		return ErrPermissionDenied
 	}
 	return nil
+}
+
+func (p *PaymentSystem) SetupAdmin() error {
+	admin, _ := p.Repo.GetUserByEmail("admin@admin.admin")
+	if admin.Email != "" {
+		return nil
+	}
+	godotenv.Load(".env")
+	password := os.Getenv("PAYMENT_ADMIN_PASSWORD")
+	user := &models.User{
+		FisrtName: "admin",
+		LastName:  "admin",
+		Email:     "admin@admin.admin",
+		Password:  password,
+		Role:      ADMIN,
+	}
+	err := p.Register(user)
+	return err
 }
