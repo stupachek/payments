@@ -9,14 +9,10 @@ import (
 )
 
 const (
-	SENT  = "sent"
-	USER  = "user"
-	ADMIN = "admin"
+	SENT = "sent"
 )
 
 var (
-	Tokens               = make(map[string]string)
-	ErrUnauthenticated   = errors.New("unauthenticated")
 	ErrUnknownAccount    = errors.New("unknown account")
 	ErrInsufficientFunds = errors.New("insufficient funds")
 	ErrWrongDestination  = errors.New("source equals destination")
