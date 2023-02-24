@@ -24,6 +24,11 @@ var (
 	ErrPermissionDenied = errors.New("permission denied")
 )
 
+type LoginReturn struct {
+	UUID  uuid.UUID
+	Token string
+}
+
 func (p *PaymentSystem) Register(user *models.User) error {
 	argon := argon2.DefaultConfig()
 
@@ -44,24 +49,28 @@ func (p *PaymentSystem) Register(user *models.User) error {
 	return err
 }
 
-func (p *PaymentSystem) LoginCheck(email string, password string) (string, error) {
+func (p *PaymentSystem) LoginCheck(email string, password string) (LoginReturn, error) {
 	u, err := p.Repo.GetUserByEmail(email)
 	if err != nil {
-		return "", ErrUnauthenticated
+		return LoginReturn{}, ErrUnauthenticated
 	}
 	ok, err := argon2.VerifyEncoded([]byte(password), []byte(u.Password))
 	if err != nil {
-		return "", ErrUnauthenticated
+		return LoginReturn{}, ErrUnauthenticated
 	}
 	if !ok {
-		return "", ErrUnauthenticated
+		return LoginReturn{}, ErrUnauthenticated
 	}
 	token, err := randToken(32)
 	if err != nil {
-		return "", ErrUnauthenticated
+		return LoginReturn{}, ErrUnauthenticated
 	}
 	Tokens[token] = email
-	return token, nil
+	loginReturn := LoginReturn{
+		UUID:  u.UUID,
+		Token: token,
+	}
+	return loginReturn, nil
 }
 
 func randToken(n int) (string, error) {
@@ -90,15 +99,11 @@ func (p *PaymentSystem) CheckToken(UUID uuid.UUID, token string) error {
 }
 
 func (p *PaymentSystem) ChangeRole(adminUUID, userUUID uuid.UUID, role string) error {
-	err := p.checkAdmin(adminUUID)
-	if err != nil {
-		return err
-	}
-	err = p.Repo.UpdateRole(userUUID, role)
+	err := p.Repo.UpdateRole(userUUID, role)
 	return err
 }
 
-func (p *PaymentSystem) checkAdmin(UUID uuid.UUID) error {
+func (p *PaymentSystem) CheckAdmin(UUID uuid.UUID) error {
 	admin, err := p.Repo.GetUserByUUID(UUID)
 	if err != nil {
 		return ErrPermissionDenied

@@ -26,6 +26,10 @@ func TestPaymentIntegration(t *testing.T) {
 	userRepo := repository.NewGormUserRepo(DB)
 	system := core.NewPaymentSystem(userRepo)
 	controller := controllers.NewHttpController(system)
+	err := controller.System.SetupAdmin()
+	if err != nil {
+		log.Fatalf("can't create admin, err %v", err.Error())
+	}
 	app := app.New(controller)
 	go func() {
 		// service connections
@@ -664,6 +668,46 @@ func TestPaymentIntegration(t *testing.T) {
 		err := reqResult["error"].(string)
 		if err != "unknown query" {
 			t.Fatalf("get accounts error: %v, exp: %v", err, "unknown query")
+		}
+
+	})
+	t.Run("new admin", func(t *testing.T) {
+		inputBob := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Moss",
+			Email:     "bob.moss@gmail.com",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", inputBob, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var UUIDBob string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputBob, nil)
+		_, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		inputAdmin := controllers.LoginInput{
+			Email:    "admin@admin.admin",
+			Password: "admin",
+		}
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputAdmin, nil)
+		tokenAdmin, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+
+		url := fmt.Sprintf("http://localhost:8080/admin/%v/update-role", reqResult["uuid"].(string))
+		auth := make(map[string]string)
+		auth["Authorization"] = tokenAdmin
+		inputRole := controllers.ChangeRoleInput{
+			UserUUID: UUIDBob,
+			Role:     "admin",
+		}
+		reqResult = sendReq(t, "POST", url, inputRole, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error change role")
 		}
 
 	})

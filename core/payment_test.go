@@ -118,11 +118,11 @@ func TestTokenSuccess(t *testing.T) {
 	if err := system.Register(bob); err != nil {
 		t.Errorf("register error: %v", err)
 	}
-	token, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	out, err := system.LoginCheck("bob.black@gmail.com", "bob123")
 	if err != nil {
 		t.Errorf("login error: %v", err)
 	}
-	if err = system.CheckToken(bob.UUID, token); err != nil {
+	if err = system.CheckToken(bob.UUID, out.Token); err != nil {
 		t.Errorf("token error: %v", err)
 	}
 }
@@ -173,11 +173,11 @@ func TestTokenWrongUser(t *testing.T) {
 	if err != nil {
 		t.Errorf("login error: %v", err)
 	}
-	tokenAlice, err := system.LoginCheck("alice.black@gmail.com", "alice123")
+	out, err := system.LoginCheck("alice.black@gmail.com", "alice123")
 	if err != nil {
 		t.Errorf("login error: %v", err)
 	}
-	if err := system.CheckToken(bob.UUID, tokenAlice); !assert.IsEqual(err, ErrUnauthenticated) {
+	if err := system.CheckToken(bob.UUID, out.Token); !assert.IsEqual(err, ErrUnauthenticated) {
 		t.Errorf("token error: %v", err)
 	}
 }
