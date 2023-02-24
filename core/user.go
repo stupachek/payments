@@ -3,11 +3,23 @@ package core
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"payment/models"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/matthewhartstonge/argon2"
+)
+
+const (
+	USER  = "user"
+	ADMIN = "admin"
+)
+
+var (
+	Tokens              = make(map[string]string)
+	ErrUnauthenticated  = errors.New("unauthenticated")
+	ErrPermissionDenied = errors.New("permission denied")
 )
 
 func (p *PaymentSystem) Register(user *models.User) error {
@@ -72,6 +84,26 @@ func (p *PaymentSystem) CheckToken(UUID uuid.UUID, token string) error {
 	}
 	if email != user.Email {
 		return ErrUnauthenticated
+	}
+	return nil
+}
+
+func (p *PaymentSystem) ChangeRole(adminUUID, userUUID uuid.UUID, role string) error {
+	err := p.checkAdmin(adminUUID)
+	if err != nil {
+		return err
+	}
+	err = p.Repo.UpdateRole(userUUID, role)
+	return err
+}
+
+func (p *PaymentSystem) checkAdmin(UUID uuid.UUID) error {
+	admin, err := p.Repo.GetUserByUUID(UUID)
+	if err != nil {
+		return ErrPermissionDenied
+	}
+	if admin.Role != ADMIN {
+		return ErrPermissionDenied
 	}
 	return nil
 }

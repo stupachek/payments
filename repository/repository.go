@@ -21,6 +21,7 @@ type Repository interface {
 	DecBalance(accountUUID uuid.UUID, amount uint) error
 	UpdateStatus(transactionUUID uuid.UUID, status string) error
 	Transaction(callback func(repo Repository) error) error
+	UpdateRole(userUUID uuid.UUID, role string) error
 }
 
 type PostgresRepo struct {
@@ -46,6 +47,10 @@ func (p *PostgresRepo) DecBalance(accountUUID uuid.UUID, amount uint) error {
 
 func (p *PostgresRepo) UpdateStatus(transactionUUID uuid.UUID, status string) error {
 	return p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Update("Status", status).Error
+}
+
+func (p *PostgresRepo) UpdateRole(userUUID uuid.UUID, role string) error {
+	return p.DB.Model(&GormUser{}).Where("UUID = ?", userUUID).Update("Role", role).Error
 }
 
 func (p *PostgresRepo) GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error) {
@@ -173,6 +178,7 @@ func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 		LastName:  userGorm.LastName,
 		Email:     userGorm.Email,
 		Password:  userGorm.Password,
+		Role:      userGorm.Role,
 		Accounts:  p.fromGormToModelAccount(userGorm.Accounts),
 	}
 	return &user, nil
@@ -190,6 +196,7 @@ func (p *PostgresRepo) GetUserByEmail(email string) (*models.User, error) {
 		LastName:  userGorm.LastName,
 		Email:     userGorm.Email,
 		Password:  userGorm.Password,
+		Role:      userGorm.Role,
 		Accounts:  p.fromGormToModelAccount(userGorm.Accounts),
 	}
 	return &user, nil
@@ -203,6 +210,8 @@ func (p *PostgresRepo) CreateUser(user *models.User) error {
 		LastName:  user.LastName,
 		Email:     user.Email,
 		Password:  user.Password,
+		Role:      user.Role,
+		Accounts:  []GormAccount{},
 	}
 	err := p.DB.Create(&gormU).Error
 	if err != nil {

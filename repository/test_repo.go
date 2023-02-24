@@ -31,6 +31,15 @@ func (t *TestRepo) UpdateStatus(transactionUUID uuid.UUID, status string) error 
 	return nil
 }
 
+func (t *TestRepo) UpdateRole(userUUID uuid.UUID, role string) error {
+	user, ok := t.Users[userUUID]
+	if !ok {
+		return ErrorUnknownAccount
+	}
+	user.Role = role
+	return nil
+}
+
 func (t *TestRepo) DecBalance(accountUUID uuid.UUID, amount uint) error {
 	account, ok := t.Accounts[accountUUID]
 	if !ok {
