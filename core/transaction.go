@@ -92,7 +92,7 @@ func (p *PaymentSystem) SendTransaction(transactionUUID uuid.UUID) (models.Trans
 			if err != nil {
 				return err
 			}
-			err = repo.UpdateStatus(transactionUUID, SENT)
+			err = repo.UpdateStatusTransaction(transactionUUID, SENT)
 			return err
 		})
 	if err != nil {

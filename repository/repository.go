@@ -19,7 +19,7 @@ type Repository interface {
 	GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error)
 	IncBalance(accountUUID uuid.UUID, amount uint) error
 	DecBalance(accountUUID uuid.UUID, amount uint) error
-	UpdateStatus(transactionUUID uuid.UUID, status string) error
+	UpdateStatusTransaction(transactionUUID uuid.UUID, status string) error
 	Transaction(callback func(repo Repository) error) error
 	UpdateRole(userUUID uuid.UUID, role string) error
 	UpdatePassword(userUUID uuid.UUID, password string) error
@@ -46,7 +46,7 @@ func (p *PostgresRepo) DecBalance(accountUUID uuid.UUID, amount uint) error {
 	return p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Balance", gorm.Expr("Balance - ?", amount)).Error
 }
 
-func (p *PostgresRepo) UpdateStatus(transactionUUID uuid.UUID, status string) error {
+func (p *PostgresRepo) UpdateStatusTransaction(transactionUUID uuid.UUID, status string) error {
 	return p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Update("Status", status).Error
 }
 

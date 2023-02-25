@@ -22,7 +22,7 @@ func (t *TestRepo) Transaction(callback func(repo Repository) error) error {
 	return callback(t)
 }
 
-func (t *TestRepo) UpdateStatus(transactionUUID uuid.UUID, status string) error {
+func (t *TestRepo) UpdateStatusTransaction(transactionUUID uuid.UUID, status string) error {
 	transaction, ok := t.Transactions[transactionUUID]
 	if !ok {
 		return ErrorUnknownAccount
