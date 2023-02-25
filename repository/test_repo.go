@@ -39,7 +39,14 @@ func (t *TestRepo) UpdateRole(userUUID uuid.UUID, role string) error {
 	user.Role = role
 	return nil
 }
-
+func (t *TestRepo) UpdatePassword(userUUID uuid.UUID, password string) error {
+	user, ok := t.Users[userUUID]
+	if !ok {
+		return ErrorUnknownAccount
+	}
+	user.Password = password
+	return nil
+}
 func (t *TestRepo) DecBalance(accountUUID uuid.UUID, amount uint) error {
 	account, ok := t.Accounts[accountUUID]
 	if !ok {

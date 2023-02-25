@@ -22,6 +22,7 @@ type Repository interface {
 	UpdateStatus(transactionUUID uuid.UUID, status string) error
 	Transaction(callback func(repo Repository) error) error
 	UpdateRole(userUUID uuid.UUID, role string) error
+	UpdatePassword(userUUID uuid.UUID, password string) error
 }
 
 type PostgresRepo struct {
@@ -51,6 +52,9 @@ func (p *PostgresRepo) UpdateStatus(transactionUUID uuid.UUID, status string) er
 
 func (p *PostgresRepo) UpdateRole(userUUID uuid.UUID, role string) error {
 	return p.DB.Model(&GormUser{}).Where("UUID = ?", userUUID).Update("Role", role).Error
+}
+func (p *PostgresRepo) UpdatePassword(userUUID uuid.UUID, password string) error {
+	return p.DB.Model(&GormUser{}).Where("UUID = ?", userUUID).Update("Password", password).Error
 }
 
 func (p *PostgresRepo) GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error) {
