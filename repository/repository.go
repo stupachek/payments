@@ -24,6 +24,7 @@ type Repository interface {
 	UpdateRole(userUUID uuid.UUID, role string) error
 	UpdatePassword(userUUID uuid.UUID, password string) error
 	UpdateStatusAccount(accountUUID uuid.UUID, status string) error
+	GetAccountsByStatus(status string, query models.QueryParams) ([]models.Account, error)
 }
 
 type PostgresRepo struct {
@@ -138,6 +139,17 @@ func (p *PostgresRepo) fromGormToModelTransaction(transactions []GormTransaction
 func (p *PostgresRepo) GetAccountsForUser(userUUID uuid.UUID, query models.QueryParams) ([]models.Account, error) {
 	var gormAccounts []GormAccount
 	result := p.DB.Model(GormAccount{}).Where("User_UUID = ?", userUUID).Order(query.Sort).Limit(int(query.Limit)).Offset(int(query.Offset)).Find(&gormAccounts)
+	if err := result.Error; err != nil {
+		return []models.Account{}, err
+	}
+	modelAccounts := p.fromGormToModelAccount(gormAccounts)
+	return modelAccounts, nil
+
+}
+
+func (p *PostgresRepo) GetAccountsByStatus(status string, query models.QueryParams) ([]models.Account, error) {
+	var gormAccounts []GormAccount
+	result := p.DB.Model(GormAccount{}).Where("Status = ?", status).Order(query.Sort).Limit(int(query.Limit)).Offset(int(query.Offset)).Find(&gormAccounts)
 	if err := result.Error; err != nil {
 		return []models.Account{}, err
 	}

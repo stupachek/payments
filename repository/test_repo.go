@@ -128,6 +128,16 @@ func (t *TestRepo) GetAccountsForUser(userUUID uuid.UUID, paganition models.Quer
 	return accounts, nil
 }
 
+func (t *TestRepo) GetAccountsByStatus(status string, paganition models.QueryParams) ([]models.Account, error) {
+	accounts := make([]models.Account, 0)
+	for _, account := range t.Accounts {
+		if account.Status == status {
+			accounts = append(accounts, *account)
+		}
+	}
+	return accounts, nil
+}
+
 func (p *TestRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 	user, ok := p.Users[uuid]
 	if !ok {

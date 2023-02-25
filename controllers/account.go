@@ -68,6 +68,22 @@ func query(ctx *gin.Context) (models.QueryParams, error) {
 	}, nil
 }
 
+func sort(ctx *gin.Context) string {
+	sort_by := ctx.DefaultQuery("sort_by", "uuid")
+	sort_by = strings.ToLower(sort_by)
+	order := ctx.DefaultQuery("order", "asc")
+	order = strings.ToLower(order)
+	if !(sort_by == UUID || sort_by == IBAN || sort_by == BALANCE) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
+		return ""
+	}
+	if !(order == DESC || order == ASC) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
+		return ""
+	}
+	return sort_by + " " + order
+}
+
 func (c *Controller) GetAccounts(ctx *gin.Context) {
 	UUIDstr := ctx.Param("user_uuid")
 	userUUID, err := uuid.Parse(UUIDstr)
@@ -81,20 +97,25 @@ func (c *Controller) GetAccounts(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
 		return
 	}
-	sort_by := ctx.DefaultQuery("sort_by", "uuid")
-	sort_by = strings.ToLower(sort_by)
-	order := ctx.DefaultQuery("order", "asc")
-	order = strings.ToLower(order)
-	if !(sort_by == UUID || sort_by == IBAN || sort_by == BALANCE) {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
-		return
-	}
-	if !(order == DESC || order == ASC) {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
-		return
-	}
-	query.Sort = sort_by + " " + order
+
+	query.Sort = sort(ctx)
 	accounts, err := c.System.GetAccounts(userUUID, query)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"accounts": accounts})
+
+}
+
+func (c *Controller) GetAccountsRequested(ctx *gin.Context) {
+	query, err := query(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
+		return
+	}
+	query.Sort = sort(ctx)
+	accounts, err := c.System.GetAccountsRequested(query)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

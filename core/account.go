@@ -115,3 +115,7 @@ func (p *PaymentSystem) IsBlocked(accountUUID uuid.UUID) (bool, error) {
 	}
 	return false, nil
 }
+
+func (p *PaymentSystem) GetAccountsRequested(query models.QueryParams) ([]models.Account, error) {
+	return p.Repo.GetAccountsByStatus(REQUESTED, query)
+}

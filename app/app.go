@@ -29,6 +29,7 @@ func New(c controllers.Controller) *App {
 	admin.Use(middleware.Auth(c), middleware.CheckAdmin(c))
 	admin.POST("/update-role", c.ChangeRole)
 	admin.POST("/accounts/:account_uuid/unblock", c.UnblockAccount)
+	admin.GET("/accounts/requested", c.GetAccountsRequested)
 	user.POST("/accounts/new", c.NewAccount)
 	user.GET("/accounts", c.GetAccounts)
 	account := user.Group("/accounts/:account_uuid")
