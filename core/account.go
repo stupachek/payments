@@ -1,10 +1,19 @@
 package core
 
 import (
+	"errors"
 	"payment/models"
 
 	"github.com/google/uuid"
 )
+
+const (
+	ACTIVE    = "active"
+	BLOCKED   = "blocked"
+	REQUESTED = "requested-unblock"
+)
+
+var ErrUnblock = errors.New("account isn't blocked")
 
 func (p *PaymentSystem) NewAccount(userUUID uuid.UUID) (models.Account, error) {
 	user, err := p.Repo.GetUserByUUID(userUUID)
@@ -75,4 +84,34 @@ func (p *PaymentSystem) ShowBalance(accountUUID uuid.UUID) (uint, error) {
 func (p *PaymentSystem) GetAccount(accountUUID uuid.UUID) (models.Account, error) {
 	account, err := p.Repo.GetAccountByUUID(accountUUID)
 	return *account, err
+}
+
+func (p *PaymentSystem) Block(accountUUID uuid.UUID) error {
+	return p.Repo.UpdateStatusAccount(accountUUID, BLOCKED)
+}
+
+func (p *PaymentSystem) Unblock(accountUUID uuid.UUID) error {
+	return p.Repo.UpdateStatusAccount(accountUUID, ACTIVE)
+}
+
+func (p *PaymentSystem) RequestUnBlock(accountUUID uuid.UUID) error {
+	ok, err := p.IsBlocked(accountUUID)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return ErrUnblock
+	}
+	return p.Repo.UpdateStatusAccount(accountUUID, REQUESTED)
+}
+
+func (p *PaymentSystem) IsBlocked(accountUUID uuid.UUID) (bool, error) {
+	account, err := p.GetAccount(accountUUID)
+	if err != nil {
+		return false, err
+	}
+	if account.Status == BLOCKED {
+		return true, nil
+	}
+	return false, nil
 }
