@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"payment/core"
 	"payment/models"
 	"strconv"
 	"strings"
@@ -47,37 +46,6 @@ func (c *Controller) NewAccount(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "new account add", "uuid": account.UUID})
-
-}
-
-func (c *Controller) ChangeRole(ctx *gin.Context) {
-	UUIDstr := ctx.Param("user_uuid")
-	adminUUID, err := uuid.Parse(UUIDstr)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	var input ChangeRoleInput
-	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	if !(input.Role == core.USER || input.Role != core.ADMIN) {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownRoleError})
-		return
-	}
-	userUUID, err := uuid.Parse(input.UserUUID)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": BadRequestError})
-		return
-	}
-	err = c.System.ChangeRole(adminUUID, userUUID, input.Role)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"message": "change role"})
 
 }
 
