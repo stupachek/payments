@@ -49,4 +49,5 @@ jobs:
         DB_PASSWORD: postgres
         DB_NAME: payment
         DB_PORT: 5432
+        PAYMENT_ADMIN_PASSWORD: admin
 
