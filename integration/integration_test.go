@@ -671,7 +671,7 @@ func TestPaymentIntegration(t *testing.T) {
 		}
 
 	})
-	t.Run("new admin", func(t *testing.T) {
+	t.Run("newAdmin", func(t *testing.T) {
 		inputBob := controllers.RegisterInput{
 			FisrtName: "Bob",
 			LastName:  "Moss",
@@ -708,6 +708,46 @@ func TestPaymentIntegration(t *testing.T) {
 		reqResult = sendReq(t, "POST", url, inputRole, auth)
 		if _, ok := reqResult["message"]; !ok {
 			t.Fatal("error change role")
+		}
+
+	})
+	t.Run("newAdminFailed", func(t *testing.T) {
+		inputBob := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Moss",
+			Email:     "bob.moss@gmail.com",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", inputBob, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var UUIDBob string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputBob, nil)
+		_, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		inputAdmin := controllers.LoginInput{
+			Email:    "admin@admin.admin",
+			Password: "admin",
+		}
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputAdmin, nil)
+		tokenAdmin, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+
+		url := fmt.Sprintf("http://localhost:8080/admin/%v/update-role", reqResult["uuid"].(string))
+		auth := make(map[string]string)
+		auth["Authorization"] = tokenAdmin
+		inputRole := controllers.ChangeRoleInput{
+			UserUUID: UUIDBob,
+			Role:     "superman",
+		}
+		reqResult = sendReq(t, "POST", url, inputRole, auth)
+		if err := reqResult["error"]; err != controllers.UnknownRoleError {
+			t.Fatalf("error change role: %v, exp %v", err, controllers.UnknownRoleError)
 		}
 
 	})
