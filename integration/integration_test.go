@@ -714,8 +714,8 @@ func TestPaymentIntegration(t *testing.T) {
 	t.Run("newAdminFailed", func(t *testing.T) {
 		inputBob := controllers.RegisterInput{
 			FisrtName: "Bob",
-			LastName:  "Moss",
-			Email:     "bob.moss@gmail.com",
+			LastName:  "Evans",
+			Email:     "bob.evans123@gmail.com",
 			Password:  "qwerty",
 		}
 		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", inputBob, nil)
@@ -751,6 +751,7 @@ func TestPaymentIntegration(t *testing.T) {
 		}
 
 	})
+
 }
 
 func sendReq(t *testing.T, method string, url string, inputT interface{}, headers map[string]string) map[string]any {
