@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	"github.com/matthewhartstonge/argon2"
+	"gorm.io/gorm"
 )
 
 const (
@@ -29,15 +29,24 @@ type LoginReturn struct {
 	Token string
 }
 
-func (p *PaymentSystem) Register(user *models.User) error {
+func newPassword(password string) (string, error) {
 	argon := argon2.DefaultConfig()
 
-	hashedPasword, err := argon.HashEncoded([]byte(user.Password))
-	user.Password = ""
+	hashedPasword, err := argon.HashEncoded([]byte(password))
+	password = ""
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPasword), nil
+
+}
+
+func (p *PaymentSystem) Register(user *models.User) error {
+	var err error
+	user.Password, err = newPassword(user.Password)
 	if err != nil {
 		return err
 	}
-	user.Password = string(hashedPasword)
 	user.UUID, err = uuid.NewRandom()
 	if err != nil {
 		return err
@@ -115,12 +124,18 @@ func (p *PaymentSystem) CheckAdmin(UUID uuid.UUID) error {
 }
 
 func (p *PaymentSystem) SetupAdmin() error {
-	admin, _ := p.Repo.GetUserByEmail("admin@admin.admin")
-	if admin.Email != "" {
-		return nil
-	}
-	godotenv.Load(".env")
+	admin, err := p.Repo.GetUserByEmail("admin@admin.admin")
 	password := os.Getenv("PAYMENT_ADMIN_PASSWORD")
+	if strings.Contains(err.Error(), "duplicate key value") {
+		password, err = newPassword(password)
+		if err != nil {
+			return err
+		}
+		p.Repo.UpdatePassword(admin.UUID, password)
+		return nil
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
 	user := &models.User{
 		FisrtName: "admin",
 		LastName:  "admin",
@@ -128,6 +143,6 @@ func (p *PaymentSystem) SetupAdmin() error {
 		Password:  password,
 		Role:      ADMIN,
 	}
-	err := p.Register(user)
+	err = p.Register(user)
 	return err
 }
