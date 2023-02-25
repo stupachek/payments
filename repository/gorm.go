@@ -26,6 +26,7 @@ type GormAccount struct {
 	IBAN         string    `json:"iban" gorm:"size:250;not null;unique"`
 	Balance      uint      `json:"balance" gorm:"not null"`
 	UserUUID     uuid.UUID
+	Status       string
 	Sources      []GormTransaction `gorm:"foreignKey:SourceUUID"`
 	Destinations []GormTransaction `gorm:"foreignKey:DestinationUUID"`
 }

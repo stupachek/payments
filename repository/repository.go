@@ -108,6 +108,7 @@ func (p *PostgresRepo) fromGormToModelAccount(accounts []GormAccount) []models.A
 			IBAN:     acc.IBAN,
 			Balance:  acc.Balance,
 			UserUUID: acc.UserUUID,
+			Status:   acc.Status,
 		}
 	}
 
@@ -147,6 +148,7 @@ func (p *PostgresRepo) CreateAccount(account *models.Account) error {
 		IBAN:     account.IBAN,
 		Balance:  account.Balance,
 		UserUUID: account.UserUUID,
+		Status:   account.Status,
 	}
 	err := p.DB.Create(&gormAcc).Error
 	if err != nil {
@@ -166,6 +168,7 @@ func (p *PostgresRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
 		IBAN:     gormAccount.IBAN,
 		Balance:  gormAccount.Balance,
 		UserUUID: gormAccount.UserUUID,
+		Status:   gormAccount.Status,
 	}
 	return &account, nil
 }
