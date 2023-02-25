@@ -25,7 +25,7 @@ func New(c controllers.Controller) *App {
 
 	user := public.Group("/:user_uuid")
 	user.Use(middleware.Auth(c))
-	admin := public.Group("/admin/:user_uuid")
+	admin := r.Group("/admin/:user_uuid")
 	admin.Use(middleware.Auth(c), middleware.CheckAdmin(c))
 	admin.POST("/update-role", c.ChangeRole)
 	user.POST("/accounts/new", c.NewAccount)
