@@ -25,9 +25,18 @@ func (t *TestRepo) Transaction(callback func(repo Repository) error) error {
 func (t *TestRepo) UpdateStatusTransaction(transactionUUID uuid.UUID, status string) error {
 	transaction, ok := t.Transactions[transactionUUID]
 	if !ok {
-		return ErrorUnknownAccount
+		return ErrorUnknownTransaction
 	}
 	transaction.Status = status
+	return nil
+}
+
+func (t *TestRepo) UpdateStatusAccount(accountUUID uuid.UUID, status string) error {
+	account, ok := t.Accounts[accountUUID]
+	if !ok {
+		return ErrorUnknownAccount
+	}
+	account.Status = status
 	return nil
 }
 

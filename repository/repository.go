@@ -23,6 +23,7 @@ type Repository interface {
 	Transaction(callback func(repo Repository) error) error
 	UpdateRole(userUUID uuid.UUID, role string) error
 	UpdatePassword(userUUID uuid.UUID, password string) error
+	UpdateStatusAccount(accountUUID uuid.UUID, status string) error
 }
 
 type PostgresRepo struct {
@@ -48,6 +49,9 @@ func (p *PostgresRepo) DecBalance(accountUUID uuid.UUID, amount uint) error {
 
 func (p *PostgresRepo) UpdateStatusTransaction(transactionUUID uuid.UUID, status string) error {
 	return p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Update("Status", status).Error
+}
+func (p *PostgresRepo) UpdateStatusAccount(accountUUID uuid.UUID, status string) error {
+	return p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Status", status).Error
 }
 
 func (p *PostgresRepo) UpdateRole(userUUID uuid.UUID, role string) error {
