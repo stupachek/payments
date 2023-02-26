@@ -14,8 +14,9 @@ import (
 )
 
 const (
-	USER  = "user"
-	ADMIN = "admin"
+	USER        = "user"
+	ADMIN       = "admin"
+	EMAIN_ADMIN = "admin@admin.admin"
 )
 
 var (
@@ -124,7 +125,7 @@ func (p *PaymentSystem) CheckAdmin(UUID uuid.UUID) error {
 }
 
 func (p *PaymentSystem) SetupAdmin() error {
-	admin, err := p.Repo.GetUserByEmail("admin@admin.admin")
+	admin, err := p.Repo.GetUserByEmail(EMAIN_ADMIN)
 	password := os.Getenv("PAYMENT_ADMIN_PASSWORD")
 	if strings.Contains(err.Error(), "duplicate key value") {
 		password, err = newPassword(password)
@@ -139,7 +140,7 @@ func (p *PaymentSystem) SetupAdmin() error {
 	user := &models.User{
 		FisrtName: "admin",
 		LastName:  "admin",
-		Email:     "admin@admin.admin",
+		Email:     EMAIN_ADMIN,
 		Password:  password,
 		Role:      ADMIN,
 	}
