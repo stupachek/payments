@@ -202,6 +202,7 @@ func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 		Email:     userGorm.Email,
 		Password:  userGorm.Password,
 		Role:      userGorm.Role,
+		Status:    userGorm.Status,
 		Accounts:  p.fromGormToModelAccount(userGorm.Accounts),
 	}
 	return &user, nil
@@ -220,6 +221,7 @@ func (p *PostgresRepo) GetUserByEmail(email string) (*models.User, error) {
 		Email:     userGorm.Email,
 		Password:  userGorm.Password,
 		Role:      userGorm.Role,
+		Status:    userGorm.Status,
 		Accounts:  p.fromGormToModelAccount(userGorm.Accounts),
 	}
 	return &user, nil
@@ -234,6 +236,7 @@ func (p *PostgresRepo) CreateUser(user *models.User) error {
 		Email:     user.Email,
 		Password:  user.Password,
 		Role:      user.Role,
+		Status:    user.Status,
 		Accounts:  []GormAccount{},
 	}
 	err := p.DB.Create(&gormU).Error
