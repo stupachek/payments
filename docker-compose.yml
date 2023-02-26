@@ -24,3 +24,4 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-payment}
       DB_PORT: ${DB_PORT:-5432}
+      PAYMENT_ADMIN_PASSWORD: ${PAYMENT_ADMIN_PASSWORD:-admin}

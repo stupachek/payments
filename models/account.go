@@ -9,4 +9,5 @@ type Account struct {
 	IBAN     string    `json:"iban"`
 	Balance  uint      `json:"balance"`
 	UserUUID uuid.UUID `json:"user_uuid"`
+	Status   string    `json:"status"`
 }

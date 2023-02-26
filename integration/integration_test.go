@@ -26,6 +26,10 @@ func TestPaymentIntegration(t *testing.T) {
 	userRepo := repository.NewGormUserRepo(DB)
 	system := core.NewPaymentSystem(userRepo)
 	controller := controllers.NewHttpController(system)
+	err := controller.System.SetupAdmin()
+	if err != nil {
+		log.Fatalf("can't create admin, err %v", err.Error())
+	}
 	app := app.New(controller)
 	go func() {
 		// service connections
@@ -667,6 +671,140 @@ func TestPaymentIntegration(t *testing.T) {
 		}
 
 	})
+	t.Run("newAdmin", func(t *testing.T) {
+		inputBob := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Moss",
+			Email:     "bob.moss@gmail.com",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", inputBob, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var UUIDBob string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputBob, nil)
+		_, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		inputAdmin := controllers.LoginInput{
+			Email:    "admin@admin.admin",
+			Password: "admin",
+		}
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputAdmin, nil)
+		tokenAdmin, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+
+		url := fmt.Sprintf("http://localhost:8080/admin/%v/update-role", reqResult["uuid"].(string))
+		auth := make(map[string]string)
+		auth["Authorization"] = tokenAdmin
+		inputRole := controllers.ChangeRoleInput{
+			UserUUID: UUIDBob,
+			Role:     "admin",
+		}
+		reqResult = sendReq(t, "POST", url, inputRole, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error change role")
+		}
+
+	})
+	t.Run("newAdminFailed", func(t *testing.T) {
+		inputBob := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Evans",
+			Email:     "bob.evans123@gmail.com",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", inputBob, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var UUIDBob string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputBob, nil)
+		_, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		inputAdmin := controllers.LoginInput{
+			Email:    "admin@admin.admin",
+			Password: "admin",
+		}
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputAdmin, nil)
+		tokenAdmin, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+
+		url := fmt.Sprintf("http://localhost:8080/admin/%v/update-role", reqResult["uuid"].(string))
+		auth := make(map[string]string)
+		auth["Authorization"] = tokenAdmin
+		inputRole := controllers.ChangeRoleInput{
+			UserUUID: UUIDBob,
+			Role:     "superman",
+		}
+		reqResult = sendReq(t, "POST", url, inputRole, auth)
+		if err := reqResult["error"]; err != controllers.UnknownRoleError {
+			t.Fatalf("error change role: %v, exp %v", err, controllers.UnknownRoleError)
+		}
+
+	})
+	t.Run("blockUnblock", func(t *testing.T) {
+		inputBob := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Lee",
+			Email:     "lee.bee@gmail.com",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", inputBob, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var UUIDBob string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputBob, nil)
+		tokenBob, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		url := fmt.Sprintf("http://localhost:8080/users/%v/accounts/new", UUIDBob)
+		auth := make(map[string]string)
+		auth["Authorization"] = tokenBob
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		accountUUID := reqResult["uuid"].(string)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/block", UUIDBob, accountUUID)
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("block account error")
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/unblock", UUIDBob, accountUUID)
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("request to unblock account error")
+		}
+		inputAdmin := controllers.LoginInput{
+			Email:    "admin@admin.admin",
+			Password: "admin",
+		}
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputAdmin, nil)
+		tokenAdmin, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		adminUUID := reqResult["uuid"].(string)
+		url = fmt.Sprintf("http://localhost:8080/admin/%v/accounts/%v/unblock", adminUUID, accountUUID)
+		auth["Authorization"] = tokenAdmin
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("unblock account error")
+		}
+
+	})
+
 }
 
 func sendReq(t *testing.T, method string, url string, inputT interface{}, headers map[string]string) map[string]any {

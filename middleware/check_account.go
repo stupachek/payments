@@ -9,6 +9,7 @@ import (
 )
 
 var AccountError = gin.H{"error": "wrong account"}
+var AccountBlockedError = gin.H{"error": "account is blocked"}
 
 func CheckAccount(c controllers.Controller) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -32,6 +33,31 @@ func CheckAccount(c controllers.Controller) gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
+		ctx.Next()
+	}
+}
+
+func CheckBlocked(c controllers.Controller) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		accountUUIDstr := ctx.Param("account_uuid")
+		accountUUID, err := uuid.Parse(accountUUIDstr)
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, AccountError)
+			ctx.Abort()
+			return
+		}
+		ok, err := c.System.IsBlocked(accountUUID)
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, AccountError)
+			ctx.Abort()
+			return
+		}
+		if ok {
+			ctx.JSON(http.StatusUnauthorized, AccountBlockedError)
+			ctx.Abort()
+			return
+		}
+
 		ctx.Next()
 	}
 }

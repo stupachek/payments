@@ -29,3 +29,23 @@ func Auth(c controllers.Controller) gin.HandlerFunc {
 		ctx.Next()
 	}
 }
+
+func CheckAdmin(c controllers.Controller) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		UUIDstr := ctx.Param("user_uuid")
+		UUID, err := uuid.Parse(UUIDstr)
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, UnauthenticatedError)
+			ctx.Abort()
+			return
+		}
+
+		err = c.System.CheckAdmin(UUID)
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, err.Error())
+			ctx.Abort()
+			return
+		}
+		ctx.Next()
+	}
+}

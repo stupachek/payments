@@ -22,15 +22,40 @@ func (t *TestRepo) Transaction(callback func(repo Repository) error) error {
 	return callback(t)
 }
 
-func (t *TestRepo) UpdateStatus(transactionUUID uuid.UUID, status string) error {
+func (t *TestRepo) UpdateStatusTransaction(transactionUUID uuid.UUID, status string) error {
 	transaction, ok := t.Transactions[transactionUUID]
 	if !ok {
-		return ErrorUnknownAccount
+		return ErrorUnknownTransaction
 	}
 	transaction.Status = status
 	return nil
 }
 
+func (t *TestRepo) UpdateStatusAccount(accountUUID uuid.UUID, status string) error {
+	account, ok := t.Accounts[accountUUID]
+	if !ok {
+		return ErrorUnknownAccount
+	}
+	account.Status = status
+	return nil
+}
+
+func (t *TestRepo) UpdateRole(userUUID uuid.UUID, role string) error {
+	user, ok := t.Users[userUUID]
+	if !ok {
+		return ErrorUnknownAccount
+	}
+	user.Role = role
+	return nil
+}
+func (t *TestRepo) UpdatePassword(userUUID uuid.UUID, password string) error {
+	user, ok := t.Users[userUUID]
+	if !ok {
+		return ErrorUnknownAccount
+	}
+	user.Password = password
+	return nil
+}
 func (t *TestRepo) DecBalance(accountUUID uuid.UUID, amount uint) error {
 	account, ok := t.Accounts[accountUUID]
 	if !ok {
@@ -97,6 +122,16 @@ func (t *TestRepo) GetAccountsForUser(userUUID uuid.UUID, paganition models.Quer
 	accounts := make([]models.Account, 0)
 	for _, account := range t.Accounts {
 		if account.UserUUID == userUUID {
+			accounts = append(accounts, *account)
+		}
+	}
+	return accounts, nil
+}
+
+func (t *TestRepo) GetAccountsByStatus(status string, paganition models.QueryParams) ([]models.Account, error) {
+	accounts := make([]models.Account, 0)
+	for _, account := range t.Accounts {
+		if account.Status == status {
 			accounts = append(accounts, *account)
 		}
 	}

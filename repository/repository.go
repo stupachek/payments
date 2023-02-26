@@ -19,8 +19,12 @@ type Repository interface {
 	GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error)
 	IncBalance(accountUUID uuid.UUID, amount uint) error
 	DecBalance(accountUUID uuid.UUID, amount uint) error
-	UpdateStatus(transactionUUID uuid.UUID, status string) error
+	UpdateStatusTransaction(transactionUUID uuid.UUID, status string) error
 	Transaction(callback func(repo Repository) error) error
+	UpdateRole(userUUID uuid.UUID, role string) error
+	UpdatePassword(userUUID uuid.UUID, password string) error
+	UpdateStatusAccount(accountUUID uuid.UUID, status string) error
+	GetAccountsByStatus(status string, query models.QueryParams) ([]models.Account, error)
 }
 
 type PostgresRepo struct {
@@ -44,8 +48,18 @@ func (p *PostgresRepo) DecBalance(accountUUID uuid.UUID, amount uint) error {
 	return p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Balance", gorm.Expr("Balance - ?", amount)).Error
 }
 
-func (p *PostgresRepo) UpdateStatus(transactionUUID uuid.UUID, status string) error {
+func (p *PostgresRepo) UpdateStatusTransaction(transactionUUID uuid.UUID, status string) error {
 	return p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Update("Status", status).Error
+}
+func (p *PostgresRepo) UpdateStatusAccount(accountUUID uuid.UUID, status string) error {
+	return p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Status", status).Error
+}
+
+func (p *PostgresRepo) UpdateRole(userUUID uuid.UUID, role string) error {
+	return p.DB.Model(&GormUser{}).Where("UUID = ?", userUUID).Update("Role", role).Error
+}
+func (p *PostgresRepo) UpdatePassword(userUUID uuid.UUID, password string) error {
+	return p.DB.Model(&GormUser{}).Where("UUID = ?", userUUID).Update("Password", password).Error
 }
 
 func (p *PostgresRepo) GetTransactionByUUID(transactionUUID uuid.UUID) (*models.Transaction, error) {
@@ -99,6 +113,7 @@ func (p *PostgresRepo) fromGormToModelAccount(accounts []GormAccount) []models.A
 			IBAN:     acc.IBAN,
 			Balance:  acc.Balance,
 			UserUUID: acc.UserUUID,
+			Status:   acc.Status,
 		}
 	}
 
@@ -132,12 +147,24 @@ func (p *PostgresRepo) GetAccountsForUser(userUUID uuid.UUID, query models.Query
 
 }
 
+func (p *PostgresRepo) GetAccountsByStatus(status string, query models.QueryParams) ([]models.Account, error) {
+	var gormAccounts []GormAccount
+	result := p.DB.Model(GormAccount{}).Where("Status = ?", status).Order(query.Sort).Limit(int(query.Limit)).Offset(int(query.Offset)).Find(&gormAccounts)
+	if err := result.Error; err != nil {
+		return []models.Account{}, err
+	}
+	modelAccounts := p.fromGormToModelAccount(gormAccounts)
+	return modelAccounts, nil
+
+}
+
 func (p *PostgresRepo) CreateAccount(account *models.Account) error {
 	gormAcc := GormAccount{
 		UUID:     account.UUID,
 		IBAN:     account.IBAN,
 		Balance:  account.Balance,
 		UserUUID: account.UserUUID,
+		Status:   account.Status,
 	}
 	err := p.DB.Create(&gormAcc).Error
 	if err != nil {
@@ -157,6 +184,7 @@ func (p *PostgresRepo) GetAccountByUUID(uuid uuid.UUID) (*models.Account, error)
 		IBAN:     gormAccount.IBAN,
 		Balance:  gormAccount.Balance,
 		UserUUID: gormAccount.UserUUID,
+		Status:   gormAccount.Status,
 	}
 	return &account, nil
 }
@@ -173,6 +201,7 @@ func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 		LastName:  userGorm.LastName,
 		Email:     userGorm.Email,
 		Password:  userGorm.Password,
+		Role:      userGorm.Role,
 		Accounts:  p.fromGormToModelAccount(userGorm.Accounts),
 	}
 	return &user, nil
@@ -190,6 +219,7 @@ func (p *PostgresRepo) GetUserByEmail(email string) (*models.User, error) {
 		LastName:  userGorm.LastName,
 		Email:     userGorm.Email,
 		Password:  userGorm.Password,
+		Role:      userGorm.Role,
 		Accounts:  p.fromGormToModelAccount(userGorm.Accounts),
 	}
 	return &user, nil
@@ -203,6 +233,8 @@ func (p *PostgresRepo) CreateUser(user *models.User) error {
 		LastName:  user.LastName,
 		Email:     user.Email,
 		Password:  user.Password,
+		Role:      user.Role,
+		Accounts:  []GormAccount{},
 	}
 	err := p.DB.Create(&gormU).Error
 	if err != nil {

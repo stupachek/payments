@@ -14,6 +14,11 @@ type AddMoneyInput struct {
 	Amount string `json:"amount" binding:"required"`
 }
 
+type ChangeRoleInput struct {
+	UserUUID string `json:"user_uuid" binding:"required"`
+	Role     string `json:"role" binding:"required"`
+}
+
 const (
 	UUID    = "uuid"
 	IBAN    = "iban"
@@ -22,7 +27,12 @@ const (
 	DESC    = "desc"
 )
 
-var UnknownQueryError = "unknown query"
+var (
+	UnknownQueryError = "unknown query"
+	UnknownRoleError  = "unknown role"
+	BadRequestError   = "bad request"
+	BlockAccountError = "can't block account"
+)
 
 func (c *Controller) NewAccount(ctx *gin.Context) {
 	UUIDstr := ctx.Param("user_uuid")
@@ -58,6 +68,22 @@ func query(ctx *gin.Context) (models.QueryParams, error) {
 	}, nil
 }
 
+func sort(ctx *gin.Context) string {
+	sort_by := ctx.DefaultQuery("sort_by", "uuid")
+	sort_by = strings.ToLower(sort_by)
+	order := ctx.DefaultQuery("order", "asc")
+	order = strings.ToLower(order)
+	if !(sort_by == UUID || sort_by == IBAN || sort_by == BALANCE) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
+		return ""
+	}
+	if !(order == DESC || order == ASC) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
+		return ""
+	}
+	return sort_by + " " + order
+}
+
 func (c *Controller) GetAccounts(ctx *gin.Context) {
 	UUIDstr := ctx.Param("user_uuid")
 	userUUID, err := uuid.Parse(UUIDstr)
@@ -71,20 +97,25 @@ func (c *Controller) GetAccounts(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
 		return
 	}
-	sort_by := ctx.DefaultQuery("sort_by", "uuid")
-	sort_by = strings.ToLower(sort_by)
-	order := ctx.DefaultQuery("order", "asc")
-	order = strings.ToLower(order)
-	if !(sort_by == UUID || sort_by == IBAN || sort_by == BALANCE) {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
-		return
-	}
-	if !(order == DESC || order == ASC) {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
-		return
-	}
-	query.Sort = sort_by + " " + order
+
+	query.Sort = sort(ctx)
 	accounts, err := c.System.GetAccounts(userUUID, query)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"accounts": accounts})
+
+}
+
+func (c *Controller) GetAccountsRequested(ctx *gin.Context) {
+	query, err := query(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": UnknownQueryError})
+		return
+	}
+	query.Sort = sort(ctx)
+	accounts, err := c.System.GetAccountsRequested(query)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -134,4 +165,49 @@ func (c *Controller) GetAccount(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, gin.H{"uuid": account.UUID, "iban": account.IBAN, "balance": account.Balance})
 
+}
+
+func (c *Controller) BlockAccount(ctx *gin.Context) {
+	accountUUIDstr := ctx.Param("account_uuid")
+	accountUUID, err := uuid.Parse(accountUUIDstr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = c.System.Block(accountUUID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": BlockAccountError})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "account is blocked"})
+}
+
+func (c *Controller) RequestUnblockAccount(ctx *gin.Context) {
+	accountUUIDstr := ctx.Param("account_uuid")
+	accountUUID, err := uuid.Parse(accountUUIDstr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = c.System.RequestUnBlock(accountUUID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": BlockAccountError})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "account is waiting to be unblock"})
+}
+
+func (c *Controller) UnblockAccount(ctx *gin.Context) {
+	accountUUIDstr := ctx.Param("account_uuid")
+	accountUUID, err := uuid.Parse(accountUUIDstr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = c.System.Unblock(accountUUID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": BlockAccountError})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "account is unblocked"})
 }
