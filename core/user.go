@@ -23,6 +23,9 @@ var (
 	Tokens              = make(map[string]string)
 	ErrUnauthenticated  = errors.New("unauthenticated")
 	ErrPermissionDenied = errors.New("permission denied")
+	ErrAlreadyBlocked   = errors.New("user is already blocked")
+	ErrAlreadyActive    = errors.New("user is already active")
+	ErrBadRequest       = errors.New("bad request")
 )
 
 type LoginReturn struct {
@@ -146,4 +149,41 @@ func (p *PaymentSystem) SetupAdmin() error {
 	}
 	err = p.Register(user)
 	return err
+}
+
+func (p *PaymentSystem) BlockUser(userUUID uuid.UUID) error {
+	ok, err := p.IsBlockedUser(userUUID)
+	if err != nil {
+		return ErrBadRequest
+	}
+	if !ok {
+		return ErrAlreadyBlocked
+	}
+	err = p.Repo.UpdateStatusUser(userUUID, BLOCKED)
+	if err != nil {
+		return ErrBadRequest
+	}
+	return nil
+}
+func (p *PaymentSystem) UnblockUser(userUUID uuid.UUID) error {
+	ok, err := p.IsBlockedUser(userUUID)
+	if err != nil {
+		return ErrBadRequest
+	}
+	if ok {
+		return ErrAlreadyActive
+	}
+	err = p.Repo.UpdateStatusUser(userUUID, ACTIVE)
+	if err != nil {
+		return ErrBadRequest
+	}
+	return nil
+}
+
+func (p *PaymentSystem) IsBlockedUser(userUUID uuid.UUID) (bool, error) {
+	user, err := p.Repo.GetUserByUUID(userUUID)
+	if err != nil {
+		return false, err
+	}
+	return user.Status == BLOCKED, nil
 }

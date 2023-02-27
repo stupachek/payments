@@ -9,6 +9,8 @@ import (
 )
 
 var UnauthenticatedError = gin.H{"error": "unauthenticated"}
+var UnkownUserError = gin.H{"error": "unknown user"}
+var UserBlockedError = gin.H{"error": "user is blocked"}
 
 func Auth(c controllers.Controller) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -46,6 +48,31 @@ func CheckAdmin(c controllers.Controller) gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
+		ctx.Next()
+	}
+}
+
+func CheckBlockedUser(c controllers.Controller) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userUUIDstr := ctx.Param("user_uuid")
+		userUUID, err := uuid.Parse(userUUIDstr)
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, UnkownUserError)
+			ctx.Abort()
+			return
+		}
+		ok, err := c.System.IsBlockedUser(userUUID)
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			ctx.Abort()
+			return
+		}
+		if ok {
+			ctx.JSON(http.StatusUnauthorized, UserBlockedError)
+			ctx.Abort()
+			return
+		}
+
 		ctx.Next()
 	}
 }

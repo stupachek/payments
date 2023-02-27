@@ -19,15 +19,16 @@ type App struct {
 func New(c controllers.Controller) *App {
 	r := gin.Default()
 	public := r.Group("/users")
-
 	public.POST("/register", c.Register)
 	public.POST("/login", c.Login)
-
+	public.Use(middleware.CheckBlockedUser(c))
 	user := public.Group("/:user_uuid")
 	user.Use(middleware.Auth(c))
 	admin := r.Group("/admin/:user_uuid")
 	admin.Use(middleware.Auth(c), middleware.CheckAdmin(c))
 	admin.POST("/update-role", c.ChangeRole)
+	admin.POST("users/:target_uuid/block", c.BlockUser)
+	admin.POST("users/:target_uuid/unblock", c.UnblockUser)
 	admin.POST("/accounts/:account_uuid/unblock", c.UnblockAccount)
 	admin.GET("/accounts/requested", c.GetAccountsRequested)
 	user.POST("/accounts/new", c.NewAccount)
@@ -37,7 +38,7 @@ func New(c controllers.Controller) *App {
 	account.GET("", c.GetAccount)
 	account.POST("/block", c.BlockAccount)
 	account.POST("/unblock", c.RequestUnblockAccount)
-	account.Use(middleware.CheckBlocked(c))
+	account.Use(middleware.CheckBlockedAccount(c))
 	account.POST("/transactions/new", c.NewTransaction)
 	account.GET("/transactions", c.GetTransactions)
 	account.POST("/add-money", c.AddMoney)

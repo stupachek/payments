@@ -24,6 +24,7 @@ type Repository interface {
 	UpdateRole(userUUID uuid.UUID, role string) error
 	UpdatePassword(userUUID uuid.UUID, password string) error
 	UpdateStatusAccount(accountUUID uuid.UUID, status string) error
+	UpdateStatusUser(userUUID uuid.UUID, status string) error
 	GetAccountsByStatus(status string, query models.QueryParams) ([]models.Account, error)
 }
 
@@ -51,8 +52,13 @@ func (p *PostgresRepo) DecBalance(accountUUID uuid.UUID, amount uint) error {
 func (p *PostgresRepo) UpdateStatusTransaction(transactionUUID uuid.UUID, status string) error {
 	return p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Update("Status", status).Error
 }
+
 func (p *PostgresRepo) UpdateStatusAccount(accountUUID uuid.UUID, status string) error {
 	return p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Status", status).Error
+}
+
+func (p *PostgresRepo) UpdateStatusUser(userUUID uuid.UUID, status string) error {
+	return p.DB.Model(&GormUser{}).Where("UUID = ?", userUUID).Update("Status", status).Error
 }
 
 func (p *PostgresRepo) UpdateRole(userUUID uuid.UUID, role string) error {
