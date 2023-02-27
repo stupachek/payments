@@ -23,6 +23,7 @@ func (p *PaymentSystem) NewAccount(userUUID uuid.UUID) (models.Account, error) {
 	account := models.Account{}
 	account.UserUUID = user.UUID
 	account.IBAN, err = randToken(29)
+	account.Status = ACTIVE
 	if err != nil {
 		return models.Account{}, err
 	}
