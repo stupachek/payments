@@ -853,6 +853,79 @@ func TestPaymentIntegration(t *testing.T) {
 		}
 
 	})
+	t.Run("checkBlockedAccount", func(t *testing.T) {
+		inputBob := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Grant",
+			Email:     "bob.grant@gmail.com",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", inputBob, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var UUIDBob string = reqResult["uuid"].(string)
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputBob, nil)
+		tokenBob, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		url := fmt.Sprintf("http://localhost:8080/users/%v/accounts/new", UUIDBob)
+		auth := make(map[string]string)
+		auth["Authorization"] = tokenBob
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("create account error")
+		}
+		accountUUID := reqResult["uuid"].(string)
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/block", UUIDBob, accountUUID)
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("block account error")
+		}
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/add-money", UUIDBob, accountUUID)
+		inputAddMoney := controllers.AddMoneyInput{
+			Amount: "60",
+		}
+		reqResult = sendReq(t, "POST", url, inputAddMoney, auth)
+		if err := reqResult["error"]; err != "account is blocked" {
+			t.Fatalf("add money error: %v, exp: %v", err, "account is blocked")
+		}
+
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/unblock", UUIDBob, accountUUID)
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("request to unblock account error")
+		}
+		inputAdmin := controllers.LoginInput{
+			Email:    "admin@admin.admin",
+			Password: "admin",
+		}
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputAdmin, nil)
+		tokenAdmin, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		adminUUID := reqResult["uuid"].(string)
+		url = fmt.Sprintf("http://localhost:8080/admin/%v/accounts/%v/unblock", adminUUID, accountUUID)
+		auth["Authorization"] = tokenAdmin
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("unblock account error")
+		}
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputBob, nil)
+		tokenBob, ok = reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		auth["Authorization"] = tokenBob
+		url = fmt.Sprintf("http://localhost:8080/users/%v/accounts/%v/add-money", UUIDBob, accountUUID)
+		reqResult = sendReq(t, "POST", url, inputAddMoney, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatalf("add money error")
+		}
+
+	})
 
 }
 
