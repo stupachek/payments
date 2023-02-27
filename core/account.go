@@ -23,6 +23,7 @@ func (p *PaymentSystem) NewAccount(userUUID uuid.UUID) (models.Account, error) {
 	account := models.Account{}
 	account.UserUUID = user.UUID
 	account.IBAN, err = randToken(29)
+	account.Status = ACTIVE
 	if err != nil {
 		return models.Account{}, err
 	}
@@ -95,7 +96,7 @@ func (p *PaymentSystem) Unblock(accountUUID uuid.UUID) error {
 }
 
 func (p *PaymentSystem) RequestUnBlock(accountUUID uuid.UUID) error {
-	ok, err := p.IsBlocked(accountUUID)
+	ok, err := p.IsBlockedAccount(accountUUID)
 	if err != nil {
 		return err
 	}
@@ -105,7 +106,7 @@ func (p *PaymentSystem) RequestUnBlock(accountUUID uuid.UUID) error {
 	return p.Repo.UpdateStatusAccount(accountUUID, REQUESTED)
 }
 
-func (p *PaymentSystem) IsBlocked(accountUUID uuid.UUID) (bool, error) {
+func (p *PaymentSystem) IsBlockedAccount(accountUUID uuid.UUID) (bool, error) {
 	account, err := p.GetAccount(accountUUID)
 	if err != nil {
 		return false, err

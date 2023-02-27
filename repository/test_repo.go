@@ -40,6 +40,15 @@ func (t *TestRepo) UpdateStatusAccount(accountUUID uuid.UUID, status string) err
 	return nil
 }
 
+func (t *TestRepo) UpdateStatusUser(userUUID uuid.UUID, status string) error {
+	user, ok := t.Users[userUUID]
+	if !ok {
+		return ErrorUnknownAccount
+	}
+	user.Status = status
+	return nil
+}
+
 func (t *TestRepo) UpdateRole(userUUID uuid.UUID, role string) error {
 	user, ok := t.Users[userUUID]
 	if !ok {

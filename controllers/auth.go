@@ -39,6 +39,7 @@ func (c *Controller) Register(ctx *gin.Context) {
 		Email:     input.Email,
 		Password:  input.Password,
 		Role:      core.USER,
+		Status:    core.ACTIVE,
 	}
 	err := c.System.Register(&user)
 	if err != nil {
@@ -76,5 +77,39 @@ func (c *Controller) ChangeRole(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "change role"})
+
+}
+
+func (c *Controller) BlockUser(ctx *gin.Context) {
+	UUIDstr := ctx.Param("target_uuid")
+	userUUID, err := uuid.Parse(UUIDstr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = c.System.BlockUser(userUUID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "user is blocked"})
+
+}
+
+func (c *Controller) UnblockUser(ctx *gin.Context) {
+	UUIDstr := ctx.Param("target_uuid")
+	userUUID, err := uuid.Parse(UUIDstr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = c.System.UnblockUser(userUUID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "user is active"})
 
 }

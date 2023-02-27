@@ -23,6 +23,9 @@ var (
 	Tokens              = make(map[string]string)
 	ErrUnauthenticated  = errors.New("unauthenticated")
 	ErrPermissionDenied = errors.New("permission denied")
+	ErrUserBlocked      = errors.New("user is blocked")
+	ErrUserActive       = errors.New("user is active")
+	ErrBadRequest       = errors.New("bad request")
 )
 
 type LoginReturn struct {
@@ -63,6 +66,9 @@ func (p *PaymentSystem) LoginCheck(email string, password string) (LoginReturn, 
 	u, err := p.Repo.GetUserByEmail(email)
 	if err != nil {
 		return LoginReturn{}, ErrUnauthenticated
+	}
+	if u.Status == BLOCKED {
+		return LoginReturn{}, ErrUserBlocked
 	}
 	ok, err := argon2.VerifyEncoded([]byte(password), []byte(u.Password))
 	if err != nil {
@@ -143,7 +149,45 @@ func (p *PaymentSystem) SetupAdmin() error {
 		Email:     EMAIN_ADMIN,
 		Password:  password,
 		Role:      ADMIN,
+		Status:    ACTIVE,
 	}
 	err = p.Register(user)
 	return err
+}
+
+func (p *PaymentSystem) BlockUser(userUUID uuid.UUID) error {
+	ok, err := p.IsBlockedUser(userUUID)
+	if err != nil {
+		return ErrBadRequest
+	}
+	if ok {
+		return ErrUserBlocked
+	}
+	err = p.Repo.UpdateStatusUser(userUUID, BLOCKED)
+	if err != nil {
+		return ErrBadRequest
+	}
+	return nil
+}
+func (p *PaymentSystem) UnblockUser(userUUID uuid.UUID) error {
+	ok, err := p.IsBlockedUser(userUUID)
+	if err != nil {
+		return ErrBadRequest
+	}
+	if !ok {
+		return ErrUserActive
+	}
+	err = p.Repo.UpdateStatusUser(userUUID, ACTIVE)
+	if err != nil {
+		return ErrBadRequest
+	}
+	return nil
+}
+
+func (p *PaymentSystem) IsBlockedUser(userUUID uuid.UUID) (bool, error) {
+	user, err := p.Repo.GetUserByUUID(userUUID)
+	if err != nil {
+		return false, err
+	}
+	return user.Status == BLOCKED, nil
 }

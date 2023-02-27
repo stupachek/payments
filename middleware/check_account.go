@@ -37,7 +37,7 @@ func CheckAccount(c controllers.Controller) gin.HandlerFunc {
 	}
 }
 
-func CheckBlocked(c controllers.Controller) gin.HandlerFunc {
+func CheckBlockedAccount(c controllers.Controller) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		accountUUIDstr := ctx.Param("account_uuid")
 		accountUUID, err := uuid.Parse(accountUUIDstr)
@@ -46,7 +46,7 @@ func CheckBlocked(c controllers.Controller) gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		ok, err := c.System.IsBlocked(accountUUID)
+		ok, err := c.System.IsBlockedAccount(accountUUID)
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, AccountError)
 			ctx.Abort()

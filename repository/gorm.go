@@ -18,6 +18,7 @@ type GormUser struct {
 	Email     string        `json:"email" gorm:"size:255;not null;unique"`
 	Password  string        `json:"password" gorm:"size:250;not null"`
 	Role      string        `json:"role" gorm:"size:50;not null"`
+	Status    string        `json:"status" gorm:"size:50;not null;"`
 	Accounts  []GormAccount `gorm:"foreignKey:UserUUID"`
 }
 

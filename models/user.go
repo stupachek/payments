@@ -11,5 +11,6 @@ type User struct {
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
 	Role      string    `json:"role"`
+	Status    string    `json:"status"`
 	Accounts  []Account `json:"accounts"`
 }

@@ -751,7 +751,7 @@ func TestPaymentIntegration(t *testing.T) {
 		}
 
 	})
-	t.Run("blockUnblock", func(t *testing.T) {
+	t.Run("blockUnblockAccount", func(t *testing.T) {
 		inputBob := controllers.RegisterInput{
 			FisrtName: "Bob",
 			LastName:  "Lee",
@@ -801,6 +801,55 @@ func TestPaymentIntegration(t *testing.T) {
 		reqResult = sendReq(t, "POST", url, nil, auth)
 		if _, ok := reqResult["message"]; !ok {
 			t.Fatal("unblock account error")
+		}
+
+	})
+	t.Run("blockUnblockUser", func(t *testing.T) {
+		inputBob := controllers.RegisterInput{
+			FisrtName: "Bob",
+			LastName:  "Cook",
+			Email:     "bob.cook@gmail.com",
+			Password:  "qwerty",
+		}
+		reqResult := sendReq(t, "POST", "http://localhost:8080/users/register", inputBob, nil)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("error register")
+		}
+		var UUIDBob string = reqResult["uuid"].(string)
+
+		inputAdmin := controllers.LoginInput{
+			Email:    "admin@admin.admin",
+			Password: "admin",
+		}
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputAdmin, nil)
+		tokenAdmin, ok := reqResult["token"].(string)
+		if !ok {
+			t.Fatal("error login")
+		}
+		adminUUID := reqResult["uuid"].(string)
+		url := fmt.Sprintf("http://localhost:8080/admin/%v/users/%v/block", adminUUID, UUIDBob)
+		auth := make(map[string]string)
+		auth["Authorization"] = tokenAdmin
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("block user error")
+		}
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputBob, nil)
+		if err := reqResult["error"]; err != "user is blocked" {
+			t.Fatalf("err: %v, exp: %v", err, "user is blocked")
+		}
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputBob, nil)
+		if err := reqResult["error"]; err != "user is blocked" {
+			t.Fatalf("err: %v, exp: %v", err, "user is blocked")
+		}
+		url = fmt.Sprintf("http://localhost:8080/admin/%v/users/%v/unblock", adminUUID, UUIDBob)
+		reqResult = sendReq(t, "POST", url, nil, auth)
+		if _, ok := reqResult["message"]; !ok {
+			t.Fatal("unblock user error")
+		}
+		reqResult = sendReq(t, "POST", "http://localhost:8080/users/login", inputBob, nil)
+		if _, ok = reqResult["token"].(string); !ok {
+			t.Fatal("error login")
 		}
 
 	})

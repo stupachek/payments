@@ -24,6 +24,7 @@ type Repository interface {
 	UpdateRole(userUUID uuid.UUID, role string) error
 	UpdatePassword(userUUID uuid.UUID, password string) error
 	UpdateStatusAccount(accountUUID uuid.UUID, status string) error
+	UpdateStatusUser(userUUID uuid.UUID, status string) error
 	GetAccountsByStatus(status string, query models.QueryParams) ([]models.Account, error)
 }
 
@@ -51,8 +52,13 @@ func (p *PostgresRepo) DecBalance(accountUUID uuid.UUID, amount uint) error {
 func (p *PostgresRepo) UpdateStatusTransaction(transactionUUID uuid.UUID, status string) error {
 	return p.DB.Model(&GormTransaction{}).Where("UUID = ?", transactionUUID).Update("Status", status).Error
 }
+
 func (p *PostgresRepo) UpdateStatusAccount(accountUUID uuid.UUID, status string) error {
 	return p.DB.Model(&GormAccount{}).Where("UUID = ?", accountUUID).Update("Status", status).Error
+}
+
+func (p *PostgresRepo) UpdateStatusUser(userUUID uuid.UUID, status string) error {
+	return p.DB.Model(&GormUser{}).Where("UUID = ?", userUUID).Update("Status", status).Error
 }
 
 func (p *PostgresRepo) UpdateRole(userUUID uuid.UUID, role string) error {
@@ -202,6 +208,7 @@ func (p *PostgresRepo) GetUserByUUID(uuid uuid.UUID) (*models.User, error) {
 		Email:     userGorm.Email,
 		Password:  userGorm.Password,
 		Role:      userGorm.Role,
+		Status:    userGorm.Status,
 		Accounts:  p.fromGormToModelAccount(userGorm.Accounts),
 	}
 	return &user, nil
@@ -220,6 +227,7 @@ func (p *PostgresRepo) GetUserByEmail(email string) (*models.User, error) {
 		Email:     userGorm.Email,
 		Password:  userGorm.Password,
 		Role:      userGorm.Role,
+		Status:    userGorm.Status,
 		Accounts:  p.fromGormToModelAccount(userGorm.Accounts),
 	}
 	return &user, nil
@@ -234,6 +242,7 @@ func (p *PostgresRepo) CreateUser(user *models.User) error {
 		Email:     user.Email,
 		Password:  user.Password,
 		Role:      user.Role,
+		Status:    user.Status,
 		Accounts:  []GormAccount{},
 	}
 	err := p.DB.Create(&gormU).Error
