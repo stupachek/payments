@@ -23,8 +23,8 @@ var (
 	Tokens              = make(map[string]string)
 	ErrUnauthenticated  = errors.New("unauthenticated")
 	ErrPermissionDenied = errors.New("permission denied")
-	ErrAlreadyBlocked   = errors.New("user is already blocked")
-	ErrAlreadyActive    = errors.New("user is already active")
+	ErrUserBlocked      = errors.New("user is blocked")
+	ErrUserActive       = errors.New("user is active")
 	ErrBadRequest       = errors.New("bad request")
 )
 
@@ -66,6 +66,9 @@ func (p *PaymentSystem) LoginCheck(email string, password string) (LoginReturn, 
 	u, err := p.Repo.GetUserByEmail(email)
 	if err != nil {
 		return LoginReturn{}, ErrUnauthenticated
+	}
+	if u.Status == BLOCKED {
+		return LoginReturn{}, ErrUserBlocked
 	}
 	ok, err := argon2.VerifyEncoded([]byte(password), []byte(u.Password))
 	if err != nil {
@@ -158,7 +161,7 @@ func (p *PaymentSystem) BlockUser(userUUID uuid.UUID) error {
 		return ErrBadRequest
 	}
 	if !ok {
-		return ErrAlreadyBlocked
+		return ErrUserBlocked
 	}
 	err = p.Repo.UpdateStatusUser(userUUID, BLOCKED)
 	if err != nil {
@@ -172,7 +175,7 @@ func (p *PaymentSystem) UnblockUser(userUUID uuid.UUID) error {
 		return ErrBadRequest
 	}
 	if ok {
-		return ErrAlreadyActive
+		return ErrUserActive
 	}
 	err = p.Repo.UpdateStatusUser(userUUID, ACTIVE)
 	if err != nil {
