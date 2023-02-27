@@ -19,9 +19,9 @@ type App struct {
 func New(c controllers.Controller) *App {
 	r := gin.Default()
 	public := r.Group("/users")
+	public.Use(middleware.CheckBlockedUser(c))
 	public.POST("/register", c.Register)
 	public.POST("/login", c.Login)
-	public.Use(middleware.CheckBlockedUser(c))
 	user := public.Group("/:user_uuid")
 	user.Use(middleware.Auth(c))
 	admin := r.Group("/admin/:user_uuid")
