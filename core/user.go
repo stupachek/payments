@@ -160,7 +160,7 @@ func (p *PaymentSystem) BlockUser(userUUID uuid.UUID) error {
 	if err != nil {
 		return ErrBadRequest
 	}
-	if !ok {
+	if ok {
 		return ErrUserBlocked
 	}
 	err = p.Repo.UpdateStatusUser(userUUID, BLOCKED)
@@ -174,7 +174,7 @@ func (p *PaymentSystem) UnblockUser(userUUID uuid.UUID) error {
 	if err != nil {
 		return ErrBadRequest
 	}
-	if ok {
+	if !ok {
 		return ErrUserActive
 	}
 	err = p.Repo.UpdateStatusUser(userUUID, ACTIVE)
