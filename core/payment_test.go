@@ -551,3 +551,49 @@ func TestBlockUnblockUser(t *testing.T) {
 	}
 
 }
+
+func TestBlockUserFailed(t *testing.T) {
+	testRepo := repository.NewTestRepo()
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	if err := system.BlockUser(bob.UUID); err != nil {
+		t.Errorf("block user  error: %v", err)
+	}
+	bob, err := system.Repo.GetUserByEmail("bob.black@gmail.com")
+	if err != nil {
+		t.Errorf("get user  error: %v", err)
+	}
+	if bob.Status != BLOCKED {
+		t.Errorf("status: %v, exp :%v", bob.Status, BLOCKED)
+	}
+	if err := system.BlockUser(bob.UUID); err != ErrUserBlocked {
+		t.Errorf("unblock user  error: %v, exp: %v", err, ErrUserBlocked)
+	}
+
+}
+
+func TestUnblockUserFailed(t *testing.T) {
+	testRepo := repository.NewTestRepo()
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	if err := system.UnblockUser(bob.UUID); err != ErrUserActive {
+		t.Errorf("unblock user  error: %v, exp: %v", err, ErrUserActive)
+	}
+
+}
