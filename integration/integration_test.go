@@ -751,7 +751,7 @@ func TestPaymentIntegration(t *testing.T) {
 		}
 
 	})
-	t.Run("blockUnblock", func(t *testing.T) {
+	t.Run("blockUnblockAccount", func(t *testing.T) {
 		inputBob := controllers.RegisterInput{
 			FisrtName: "Bob",
 			LastName:  "Lee",
