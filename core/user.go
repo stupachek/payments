@@ -146,6 +146,7 @@ func (p *PaymentSystem) SetupAdmin() error {
 		Email:     EMAIN_ADMIN,
 		Password:  password,
 		Role:      ADMIN,
+		Status:    ACTIVE,
 	}
 	err = p.Register(user)
 	return err
