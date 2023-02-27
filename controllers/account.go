@@ -174,7 +174,7 @@ func (c *Controller) BlockAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err = c.System.Block(accountUUID)
+	err = c.System.BlockAccount(accountUUID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": BlockAccountError})
 		return
@@ -204,7 +204,7 @@ func (c *Controller) UnblockAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err = c.System.Unblock(accountUUID)
+	err = c.System.UnblockAccount(accountUUID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": BlockAccountError})
 		return
