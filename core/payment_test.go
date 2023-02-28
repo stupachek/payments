@@ -597,3 +597,82 @@ func TestUnblockUserFailed(t *testing.T) {
 	}
 
 }
+
+func TestBlockRequestUnblockAccount(t *testing.T) {
+	testRepo := repository.NewTestRepo()
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	account, err := system.NewAccount(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	if err := system.BlockAccount(account.UUID); err != nil {
+		t.Errorf("block account error: %v", err)
+	}
+	account, err = system.GetAccount(account.UUID)
+	if err != nil {
+		t.Errorf("get account error: %v", err)
+	}
+	if account.Status != BLOCKED {
+		t.Error("account have to be blocked")
+	}
+	if err := system.RequestUnBlock(account.UUID); err != nil {
+		t.Errorf("request unblock account error: %v", err)
+	}
+	account, err = system.GetAccount(account.UUID)
+	if err != nil {
+		t.Errorf("get account error: %v", err)
+	}
+	if account.Status != REQUESTED {
+		t.Error("account have to be requested")
+	}
+	if err := system.UnblockAccount(account.UUID); err != nil {
+		t.Errorf("request unblock account error: %v", err)
+	}
+	account, err = system.GetAccount(account.UUID)
+	if err != nil {
+		t.Errorf("get account error: %v", err)
+	}
+	if account.Status != ACTIVE {
+		t.Error("account have to be active")
+	}
+
+}
+
+func TestRequestUnblockAccountFailed(t *testing.T) {
+	testRepo := repository.NewTestRepo()
+	system := NewPaymentSystem(&testRepo)
+	bob := &models.User{
+		FisrtName: "Bob",
+		LastName:  "Black",
+		Email:     "bob.black@gmail.com",
+		Password:  "bob123",
+	}
+	if err := system.Register(bob); err != nil {
+		t.Errorf("register error: %v", err)
+	}
+	_, err := system.LoginCheck("bob.black@gmail.com", "bob123")
+	if err != nil {
+		t.Errorf("login error: %v", err)
+	}
+	account, err := system.NewAccount(bob.UUID)
+	if err != nil {
+		t.Errorf("create new account error: %v", err)
+	}
+	if err := system.RequestUnBlock(account.UUID); err != ErrUnblock {
+		t.Errorf("request unblock account error: %v, exp: %v", err, ErrUnblock)
+	}
+
+}

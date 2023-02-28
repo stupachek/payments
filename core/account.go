@@ -87,11 +87,11 @@ func (p *PaymentSystem) GetAccount(accountUUID uuid.UUID) (models.Account, error
 	return *account, err
 }
 
-func (p *PaymentSystem) Block(accountUUID uuid.UUID) error {
+func (p *PaymentSystem) BlockAccount(accountUUID uuid.UUID) error {
 	return p.Repo.UpdateStatusAccount(accountUUID, BLOCKED)
 }
 
-func (p *PaymentSystem) Unblock(accountUUID uuid.UUID) error {
+func (p *PaymentSystem) UnblockAccount(accountUUID uuid.UUID) error {
 	return p.Repo.UpdateStatusAccount(accountUUID, ACTIVE)
 }
 

@@ -38,6 +38,7 @@ func New(c controllers.Controller) *App {
 	account.GET("", c.GetAccount)
 	account.POST("/block", c.BlockAccount)
 	account.POST("/unblock", c.RequestUnblockAccount)
+	//the middleware is not used to the previous endpoints, but is working with the new ones
 	account.Use(middleware.CheckBlockedAccount(c))
 	account.POST("/transactions/new", c.NewTransaction)
 	account.GET("/transactions", c.GetTransactions)
