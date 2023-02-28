@@ -77,7 +77,8 @@ func ConnectDataBase() *gorm.DB {
 		if err == nil {
 			break
 		}
-		time.Sleep(time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
+		log.Printf("Error connecting to database: %v, retrying...", err)
 	}
 
 	if err != nil {
