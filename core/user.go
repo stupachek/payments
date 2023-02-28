@@ -133,7 +133,7 @@ func (p *PaymentSystem) CheckAdmin(UUID uuid.UUID) error {
 func (p *PaymentSystem) SetupAdmin() error {
 	admin, err := p.Repo.GetUserByEmail(EMAIN_ADMIN)
 	password := os.Getenv("PAYMENT_ADMIN_PASSWORD")
-	if strings.Contains(err.Error(), "duplicate key value") {
+	if err != nil && strings.Contains(err.Error(), "duplicate key value") {
 		password, err = newPassword(password)
 		if err != nil {
 			return err
