@@ -60,7 +60,8 @@ Body
 Body
 ```json
 {
-    "token": "1502fc251eec30608bd558c862cb7f03a129cff539e84f322f59ac6f1f846cb7"
+    "token": "b89d4729f81b23447a4a93ee01a47950431128031666a1ba368c7cf1512aed85",
+    "uuid": "b77499e2-ed74-4214-9fd0-86be3456843b"
 }
 ```
 >Other endpoints require the Authorization header with the token inside.
@@ -68,8 +69,130 @@ Body
 Header
 ```
     key:Authorization
-    value:1502fc251eec30608bd558c862cb7f03a129cff539e84f322f59ac6f1f846cb7
+    value:b89d4729f81b23447a4a93ee01a47950431128031666a1ba368c7cf1512aed85
 ```
+
+### ADMIN
+
+#### POST `http://localhost:8080/admin/:user_uuid/users/:tagret_uuid/block`
+
+blocks user
+
+##### example req
+
+`POST http://localhost:8080/admin/54149754-cf48-4c13-a949-4d67139f5110/users/d40f82da-0000-4363-bc4c-18c9eabff802/block`
+
+##### res
+
+Body
+```json
+{
+    "message": "user is blocked"
+}
+```
+
+#### POST `http://localhost:8080/admin/:user_uuid/users/:tagret_uuid/unblock`
+
+blocks user
+
+##### example req
+
+`POST http://localhost:8080/admin/54149754-cf48-4c13-a949-4d67139f5110/users/d40f82da-0000-4363-bc4c-18c9eabff802/unblock`
+
+##### res
+
+Body
+```json
+{
+    "message": "user is active"
+}
+```
+
+#### GET `http://localhost:8080/admin/:user_uuid/accounts/requested`
+
+returns all users with *requested-unblock* status
+
+##### example req
+
+`POST http://localhost:8080/admin/54149754-cf48-4c13-a949-4d67139f5110/accounts/requested`
+
+##### res
+
+Body
+```json
+{
+    "accounts": [
+        {
+            "uuid": "3c82a29a-467f-436d-a3eb-68809fa8f560",
+            "iban": "27794c8b5eb7d73256e9d7a1f74d018e76393bf4f2b8358e902ea5e312",
+            "balance": 0,
+            "user_uuid": "1ed23cb8-ff5b-4634-88b1-72f43f89f369",
+            "status": "requested-unblock"
+        }
+    ]
+}
+```
+
+#### POST `http://localhost:8080/admin/:user_uuid/accounts/:accounts_uuid/unblock`
+
+unblocks user
+
+##### example req
+
+`POST http://localhost:8080/admin/54149754-cf48-4c13-a949-4d67139f5110/accounts/3c82a29a-467f-436d-a3eb-68809fa8f560/unblock`
+
+##### res
+
+Body
+```json
+{
+    "message": "account is unblocked"
+}
+```
+
+#### POST `http://localhost:8080/admin/:user_uuid/accounts/:accounts_uuid/unblock`
+
+unblocks user
+
+##### example req
+
+`POST http://localhost:8080/admin/54149754-cf48-4c13-a949-4d67139f5110/accounts/3c82a29a-467f-436d-a3eb-68809fa8f560/unblock`
+
+##### res
+
+Body
+```json
+{
+    "message": "account is unblocked"
+}
+```
+
+#### POST `http://localhost:8080/admin/:user_uuid/update-role`
+
+changes users role;
+reqiures *user_uuid*, *role*;
+
+##### example req
+
+`POST http://localhost:8080/admin/54149754-cf48-4c13-a949-4d67139f5110/update-role`
+
+Body
+```json
+{  
+    "user_uuid": "1ed23cb8-ff5b-4634-88b1-72f43f89f369",
+    "role" : "admin"
+}
+```
+
+##### res
+
+Body
+```json
+{
+    "message": "change role"
+}
+```
+
 ### ACCOUNTS
 
 #### POST `/users/{user_uuid}/accounts/new`
@@ -107,19 +230,22 @@ Body
             "uuid": "fbe8bee3-1cb7-4d90-8388-105297522a86",
             "iban": "45d0b56c4ceee91e46b64c063d7249ae867beaa2faa9bc5c965429fc88",
             "balance": 0,
-            "user_uuid": "b77499e2-ed74-4214-9fd0-86be3456843b"
+            "user_uuid": "b77499e2-ed74-4214-9fd0-86be3456843b",
+            "status": "active"
         },
         {
             "uuid": "f1b1dee4-a176-4cec-836f-8a4aa407efbb",
             "iban": "981024baf8ef8361b285d7e9dd86b12cc88f5143c1d209e3c9d07d8354",
             "balance": 0,
-            "user_uuid": "b77499e2-ed74-4214-9fd0-86be3456843b"
+            "user_uuid": "b77499e2-ed74-4214-9fd0-86be3456843b",
+            "status": "active"
         },
         {
             "uuid": "db689093-81ca-4092-bdc2-52988d5ea970",
             "iban": "1dbfc0e2df7c3edc2ea3118f0d824ecddf29cc95452b0739b05db53d3c",
             "balance": 0,
-            "user_uuid": "b77499e2-ed74-4214-9fd0-86be3456843b"
+            "user_uuid": "b77499e2-ed74-4214-9fd0-86be3456843b",
+            "status": "active"
         }
     ]
 }
@@ -166,9 +292,42 @@ Body
         "uuid": "fbe8bee3-1cb7-4d90-8388-105297522a86",
         "iban": "45d0b56c4ceee91e46b64c063d7249ae867beaa2faa9bc5c965429fc88",
         "balance": 123,
-        "user_uuid": "b77499e2-ed74-4214-9fd0-86be3456843b"
+        "user_uuid": "b77499e2-ed74-4214-9fd0-86be3456843b",
+        "status": "active"
     },
     "message": "add money"
+}
+```
+
+#### POST `/users/{user_uuid}/accounts/{accounts_uuid}/block`
+
+block account
+
+##### example req
+
+`POST http://localhost:8080/users/1ed23cb8-ff5b-4634-88b1-72f43f89f369/accounts/3c82a29a-467f-436d-a3eb-68809fa8f560/block`
+
+##### res
+Body
+``` json
+{
+    "message": "account is blocked"
+}
+```
+
+#### POST `/users/{user_uuid}/accounts/{accounts_uuid}/unblock`
+
+block account
+
+##### example req
+
+`POST http://localhost:8080/users/1ed23cb8-ff5b-4634-88b1-72f43f89f369/accounts/3c82a29a-467f-436d-a3eb-68809fa8f560/unblock`
+
+##### res
+Body
+``` json
+{
+    "message": "account is waiting to be unblock"
 }
 ```
 ### TRANSACTION
