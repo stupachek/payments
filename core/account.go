@@ -116,6 +116,16 @@ func (p *PaymentSystem) IsBlockedAccount(accountUUID uuid.UUID) (bool, error) {
 	}
 	return false, nil
 }
+func (p *PaymentSystem) IsActiveAccount(accountUUID uuid.UUID) (bool, error) {
+	account, err := p.GetAccount(accountUUID)
+	if err != nil {
+		return false, err
+	}
+	if account.Status == ACTIVE {
+		return true, nil
+	}
+	return false, nil
+}
 
 func (p *PaymentSystem) GetAccountsRequested(query models.QueryParams) ([]models.Account, error) {
 	return p.Repo.GetAccountsByStatus(REQUESTED, query)

@@ -46,13 +46,13 @@ func CheckBlockedAccount(c controllers.Controller) gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		ok, err := c.System.IsBlockedAccount(accountUUID)
+		ok, err := c.System.IsActiveAccount(accountUUID)
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, AccountError)
 			ctx.Abort()
 			return
 		}
-		if ok {
+		if !ok {
 			ctx.JSON(http.StatusUnauthorized, AccountBlockedError)
 			ctx.Abort()
 			return
