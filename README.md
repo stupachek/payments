@@ -93,7 +93,7 @@ Body
 
 #### POST `http://localhost:8080/admin/:user_uuid/users/:tagret_uuid/unblock`
 
-blocks user
+unblocks user
 
 ##### example req
 
@@ -135,7 +135,7 @@ Body
 
 #### POST `http://localhost:8080/admin/:user_uuid/accounts/:accounts_uuid/unblock`
 
-unblocks user
+unblocks account
 
 ##### example req
 
