@@ -71,7 +71,15 @@ func ConnectDataBase() *gorm.DB {
 	}
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", DbHost, DbUser, DbPassword, DbName, DbPort)
-	DB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	var err error
+	for i := 0; i < 5; i++ {
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err == nil {
+			break
+		}
+		time.Sleep(500 * time.Millisecond)
+		log.Printf("Error connecting to database: %v, retrying...", err)
+	}
 
 	if err != nil {
 		log.Println("Cannot connect to database ", Dbdriver)
